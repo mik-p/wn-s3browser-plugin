@@ -1,0 +1,15 @@
+{
+    "name": "mikp/oc-s3browser-plugin",
+    "description": "S3 browser plugin for October CMS",
+    "type": "plugin",
+    "license": "BSD-3",
+    "authors": [
+        {
+            "name": "mik-p",
+            "email": "mppritchard3@hotmail.com"
+        }
+    ],
+    "require": {
+        "aws/aws-sdk-php": "^3.178"
+    }
+}

@@ -1,0 +1,24 @@
+fields:
+    s3activated:
+        label: Activate
+        span: left
+        type: switch
+        comment: 'activate s3 browser'
+    s3url:
+        label: 'S3 Server URL'
+        span: left
+        placeholder: 'http://s3.com'
+        type: text
+        comment: 'the URL to the S3 server'
+    s3accesskey:
+        label: 'S3 Access Key'
+        span: left
+        placeholder: s3-access-key
+        type: text
+        comment: 'the access key for the s3 server'
+    s3secretkey:
+        label: 'S3 Secret Key'
+        span: right
+        placeholder: s3-secret-key
+        type: password
+        comment: 'the secret key for the s3 server'
