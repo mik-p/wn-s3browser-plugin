@@ -22,11 +22,6 @@
         <th>Size</th>
         <th>Last Modified</th>
     </tr>
-    <tr>
-        <td><a href="{{ __SELF__.property('baseuri') }}{{ last_crumb }}">..</a></td>
-        <td> -- </td>
-        <td> -- </td>
-    </tr>
     {% for prefix in __SELF__.getPrefixes() %}
     <tr>
         <td>
@@ -50,11 +45,6 @@
     </tr>
     {% endfor %}
 </table>
-
-<br/>
-<p>
-{{ __SELF__.doTests() }}
-</p>
 
 {% else %}
 <p>This service has not been activated by the system administrator</p>

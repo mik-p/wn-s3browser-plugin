@@ -107,7 +107,7 @@ class S3Browser extends ComponentBase
         $objects = [];
         
         foreach ($objectsListResponse['Contents'] as $object) {
-            $unprefixed_key = ltrim($object['Key'], $current_prefix.'/');
+            $unprefixed_key = str_replace($current_prefix.'/', '', $object['Key']);
             $exploded_key = explode('/', $unprefixed_key);
             
             if (count($exploded_key) == 1)
@@ -144,12 +144,10 @@ class S3Browser extends ComponentBase
             
             foreach ($crumbs as $crumb)
             {
-                $unprefixed_key = ltrim($object['Key'], $current_prefix.'/');
-            }
+                $unprefixed_key = str_replace($crumb.'/', '', $unprefixed_key);
+            }    
             
-            $exploded_key = explode('/', $unprefixed_key);
-            
-            echo print_r($exploded_key);
+            $exploded_key = explode('/', $unprefixed_key);            
             
             if (count($exploded_key) == 2)
             {
@@ -186,12 +184,5 @@ class S3Browser extends ComponentBase
         	'Key' => $file_to_download, 
         	'SaveAs' => $download_as_path 
         ]);
-    }
-    
-    public function doTests()
-    {
-        $result = '';
-        
-        echo print_r($result);
     }
 }
