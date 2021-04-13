@@ -1,12 +1,61 @@
 <h1>Data Browser</h1>
 
 {% if __SELF__.activated %}
-<p>{{__SELF__.url}}</p>
-<p>{{__SELF__.access}}</p>
-<p>{{__SELF__.secret}}</p>
-{% for subPath in __SELF__.subPaths %}
-<li>{{subPath}}</li>
-{% endfor %}
+<p>
+    <a href="{{ __SELF__.property('baseuri') }}">
+        {{ __SELF__.property('bucket') }}
+    </a>
+    
+    {% set last_crumb='/' %}
+    {% for crumb in __SELF__.getBreadCrumbs() %}
+    /
+    <a href="{{ __SELF__.property('baseuri') }}{{ last_crumb }}{{crumb}}">
+        {{ crumb }}
+    </a>
+    {% set last_crumb=last_crumb~crumb~'/' %}
+    {% endfor %}
+</p>
+
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Size</th>
+        <th>Last Modified</th>
+    </tr>
+    <tr>
+        <td><a href="{{ __SELF__.property('baseuri') }}{{ last_crumb }}">..</a></td>
+        <td> -- </td>
+        <td> -- </td>
+    </tr>
+    {% for prefix in __SELF__.getPrefixes() %}
+    <tr>
+        <td>
+            <a href="{{ __SELF__.property('baseuri') }}{{ last_crumb }}{{ prefix }}">
+                {{prefix}}/
+            </a>
+        </td>
+        <td> -- </td>
+        <td> -- </td>
+    </tr>
+    {% endfor %}
+    {% for object in __SELF__.getObjects() %}
+    <tr>
+        <td>
+            <a href="">
+                {{object.ShortName}}
+            </a>
+        </td>
+        <td>{{object.Size}} - Bytes</td>
+        <td>{{object.LastModified}}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<br/>
+<p>
+{{ __SELF__.doTests() }}
+</p>
+
 {% else %}
 <p>This service has not been activated by the system administrator</p>
 {% endif %}
