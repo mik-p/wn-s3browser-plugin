@@ -1,0 +1,24 @@
+<div id=fileDetails>
+    {% if s3_file_details.active %}
+    <h4>Details</h4>
+    <table>
+        <tr>
+            <th>Name</th>
+            <td>{{s3_file_details.name}}</td>
+        </tr>
+        <tr>
+            <th>API Path</th>
+            <td>
+                <a href="" data-request="{{__SELF__}}::onCopyAPIURL"
+                    data-request-success="alert('URL copied to clipboard!')"
+                    data-request-data="api_url: '{{s3_file_details.api}}'">
+                    {{s3_file_details.api}}
+                </a>
+            </td>
+        </tr>
+    </table>
+    <a href="{{s3_file_details.api}}" target="_blank" rel="noopener noreferrer">
+        download
+    </a>
+    {% endif %}
+</div>

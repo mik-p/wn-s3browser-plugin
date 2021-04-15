@@ -7,7 +7,7 @@ class Plugin extends PluginBase
     public $elevated = true;
 
 	public $require = ['RainLab.User'];
-	
+
     public function registerComponents()
     {
         return [
@@ -25,7 +25,7 @@ class Plugin extends PluginBase
                 'class'       => 'mikp\s3browser\Models\Settings',
                 'order'       => 600,
                 'keywords'    => 's3 data files',
-                //'permissions' => ['acme.users.access_settings']
+                'permissions' => ['mikp.s3browser.settings']
             ]
         ];
     }

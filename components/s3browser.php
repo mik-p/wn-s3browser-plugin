@@ -10,19 +10,17 @@ use Aws\S3\S3Client;
 class S3Browser extends ComponentBase
 {
     public $storage_client;
-    
+
     public $activated = false;
-    
+
     public $url = '';
-    
+
     public $region = 'us-east-1';
-    
+
     public $access = '';
-    
+
     public $secret = '';
-    
-    public $subPaths = [];
-    
+
     public function componentDetails()
     {
         return [
@@ -61,8 +59,18 @@ class S3Browser extends ComponentBase
             ]
         ];
     }
-    
+
     public function onRun()
+    {
+        $this->createS3Client();
+    }
+
+    public function init()
+    {
+        $this->createS3Client();
+    }
+
+    public function createS3Client ()
     {
         // get settings
         $this->activated = Settings::get('s3activated', false);
@@ -70,7 +78,7 @@ class S3Browser extends ComponentBase
         $this->region = Settings::get('s3region', 'us-east-1');
         $this->access = Settings::get('s3accesskey', 'no-access');
         $this->secret = Settings::get('s3secretkey', 'no-secret');
-        
+
         // connect to s3 with given credentials
         $this->storage_client = new S3Client([
             'version' => 'latest',
@@ -83,33 +91,40 @@ class S3Browser extends ComponentBase
                 ],
         ]);
     }
-    
+
     public function listBuckets()
     {
         $bucketListResponse = $this->storage_client->listBuckets();
         return $bucketListResponse['Buckets'];
     }
-    
+
     public function getObjects()
     {
         $current_prefix = '';
-        
+
         if (is_string($this->property('prefix')))
         {
             $current_prefix = $this->property('prefix');
         }
-        
+
         $objectsListResponse = $this->storage_client->listObjects([
             'Bucket' => $this->property('bucket'),
             'Prefix' => $current_prefix
         ]);
-        
+
         $objects = [];
-        
+
         foreach ($objectsListResponse['Contents'] as $object) {
-            $unprefixed_key = str_replace($current_prefix.'/', '', $object['Key']);
+
+            $unprefixed_key = $object['Key'];
+
+            if ($current_prefix != '')
+            {
+                $unprefixed_key = str_replace($current_prefix.'/', '', $object['Key']);
+            }
+
             $exploded_key = explode('/', $unprefixed_key);
-            
+
             if (count($exploded_key) == 1)
             {
                 $object['ShortName'] = $exploded_key[0];
@@ -119,70 +134,97 @@ class S3Browser extends ComponentBase
 
         return $objects;
     }
-    
+
     public function getPrefixes()
     {
         $current_prefix = '';
-        
+
         if (is_string($this->property('prefix')))
         {
             $current_prefix = $this->property('prefix');
         }
-        
+
         $objectsListResponse = $this->storage_client->listObjects([
             'Bucket' => $this->property('bucket'),
             'Prefix' => $current_prefix
             //'Delimiter' => '/'
         ]);
-        
+
         $crumbs = $this->getBreadCrumbs();
-        
+
         $prefixes = [];
-        
+
         foreach ($objectsListResponse['Contents'] as $object) {
             $unprefixed_key = $object['Key'];
-            
-            foreach ($crumbs as $crumb)
+
+            if ($current_prefix != '')
             {
-                $unprefixed_key = str_replace($crumb.'/', '', $unprefixed_key);
-            }    
-            
-            $exploded_key = explode('/', $unprefixed_key);            
-            
+                foreach ($crumbs as $crumb)
+                {
+                    $unprefixed_key = str_replace($crumb.'/', '', $unprefixed_key);
+                }
+            }
+
+            $exploded_key = explode('/', $unprefixed_key);
+
             if (count($exploded_key) == 2)
             {
                 $prefixes[] = $exploded_key[0];
             }
         }
-        
+
         return array_unique($prefixes);
     }
-    
+
     public function getBreadCrumbs()
     {
         $current_prefix = '';
-        
+
         if (is_string($this->property('prefix')))
         {
             $current_prefix = $this->property('prefix');
         }
-        
+
         $crumbs = explode('/', $current_prefix);
-        
+
         return $crumbs;
     }
-    
+
+    public function onFileDetails()
+    {
+        $this->page['s3_file_details'] = [
+            'active' => true,
+            'name' => post('short_name'),
+            'path' => post('file_name'),
+            'api' => '/s3browser/api/v1/download/'.post('file_name')
+        ];
+    }
+
+    public function onCopyAPIURL()
+    {
+        return post('api_url');
+    }
+
     public function onDownload()
     {
-        # lets download our file 
-        $file_to_download = 'from_php_script/lullaby.txt'; # private file: 'from_php_script/lullaby-private.txt' 
-        $download_as_path = __dir__.'/downloads/lullaby.txt'; 
-        
-        # save object to a file 
-        $result = $s3->getObject([ 
-        	'Bucket' => $config['s3-access']['bucket'], 
-        	'Key' => $file_to_download, 
-        	'SaveAs' => $download_as_path 
-        ]);
+        // lets download our file
+        $file_to_download = post('s3_key');
+
+        try {
+            // send object back
+            $object = $this->storage_client->getObject([
+                'Bucket' => $this->property('bucket'),
+                'Key' => $file_to_download
+            ]);
+
+            header("Content-Type: {$object['ContentType']}");
+            echo $object['Body'];
+        }
+        catch (S3Exception $e)
+        {
+            echo $e->getMessage() . PHP_EOL;
+        }
+
+        // file_put_contents($download_as_path, $object['Body']->getContents());
     }
 }

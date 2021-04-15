@@ -5,7 +5,7 @@
     <a href="{{ __SELF__.property('baseuri') }}">
         {{ __SELF__.property('bucket') }}
     </a>
-    
+
     {% set last_crumb='/' %}
     {% for crumb in __SELF__.getBreadCrumbs() %}
     /
@@ -36,7 +36,10 @@
     {% for object in __SELF__.getObjects() %}
     <tr>
         <td>
-            <a href="">
+            <a href="{{ __SELF__.property('baseuri') }}{{ last_crumb }}{{ prefix }}{{object.ShortName}}"
+                data-request="{{__SELF__}}::onFileDetails"
+                data-request-update="'{{ __SELF__ }}::file-details': '#fileDetails'"
+                data-request-data="file_name: '{{object.Key}}', short_name: '{{object.ShortName}}'">
                 {{object.ShortName}}
             </a>
         </td>
@@ -45,6 +48,9 @@
     </tr>
     {% endfor %}
 </table>
+
+<br />
+{% partial __SELF__~'::file-details'%}
 
 {% else %}
 <p>This service has not been activated by the system administrator</p>
