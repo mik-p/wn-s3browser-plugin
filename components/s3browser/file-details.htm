@@ -9,16 +9,37 @@
         <tr>
             <th>API Path</th>
             <td>
-                <a href="" data-request="{{__SELF__}}::onCopyAPIURL"
-                    data-request-success="alert('URL copied to clipboard!')"
-                    data-request-data="api_url: '{{s3_file_details.api}}'">
+                <a id="copy-api-url" href="{{s3_file_details.api}}">
                     {{s3_file_details.api}}
                 </a>
+                <button onClick="copyAPIURL()">
+                    Copy
+                </button>
             </td>
         </tr>
     </table>
-    <a href="{{s3_file_details.api}}" target="_blank" rel="noopener noreferrer">
+    <a href="{{s3_file_details.api}}">
         download
     </a>
     {% endif %}
 </div>
+
+<script>
+    function copyAPIURL() {
+        // create an input element
+        var apiURL = document.body.appendChild(document.createElement("input"));
+        apiURL.value = document.getElementById("copy-api-url").getAttribute("href");
+
+        // set the window to get this element data
+        apiURL.focus();
+        apiURL.select();
+
+        // copy
+        document.execCommand('copy');
+
+        // remove the input when done
+        apiURL.parentNode.removeChild(apiURL);
+
+        alert("Copied URL!");
+    }
+</script>

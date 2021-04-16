@@ -9,7 +9,9 @@ use Aws\S3\S3Client;
 
 use Auth;
 use App;
+// use Illuminate\Http\Response;
 use Response;
+use Illuminate\Http\Request;
 
 class API extends Controller
 {
@@ -39,15 +41,65 @@ class API extends Controller
         );
     }
 
-    public function download($file)
+    public function download(Request $req)
     {
+        // read request url encoded parameters
+        $object_key = $req->query('object_key');
+        $bucket = $req->query('bucket');
+
+        if (!isset($bucket) || !isset($object_key))
+        {
+            return Response::make('bad request missing url parameters', 400);
+        }
+
+        try
+        {
+            // send object back
+            $object = $this->storage_client->getObject([
+                'Bucket' => $bucket,
+                'Key' => $object_key
+            ]);
+
+            // make a file name for the download
+            $exploded_key = explode('/', $object_key);
+            $file_name = end($exploded_key);
+            array_pop($exploded_key);
+            foreach ($exploded_key as $name_part)
+            {
+                $file_name = $name_part.'-'.$file_name;
+            }
+
+            // send file to browser as a download
+            $headers = ['Content-Type' => $object['ContentType']];
+            return Response()->streamDownload(
+                function () use ($object) { echo $object['Body']; },
+                basename($file_name),
+                $headers
+            );
+        }
+        catch (S3Exception $e)
+        {
+            return Response::make($e->getMessage(), 500);
+        }
+
         return Response::make('not found', 404);
         // App::abort(404, 'could not find resource');
     }
 
     public function upload($request)
     {
-        # code...
+        if(isset($_FILES['image'])){
+            $file_name = $_FILES['image']['name'];
+            $temp_file_location = $_FILES['image']['tmp_name'];
+
+            $result = $this->storage_client->putObject([
+                'Bucket' => $this->property('bucket'),
+                'Key'    => $file_name,
+                'SourceFile' => $temp_file_location
+            ]);
+
+            var_dump($result);
+        }
     }
 
     // helpers

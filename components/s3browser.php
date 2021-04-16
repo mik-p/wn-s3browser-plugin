@@ -167,7 +167,7 @@ class S3Browser extends ComponentBase
 
             $exploded_key = explode('/', $unprefixed_key);
 
-            if (count($exploded_key) == 2)
+            if (count($exploded_key) >= 2)
             {
                 $prefixes[] = $exploded_key[0];
             }
@@ -196,35 +196,7 @@ class S3Browser extends ComponentBase
             'active' => true,
             'name' => post('short_name'),
             'path' => post('file_name'),
-            'api' => '/s3browser/api/v1/download/'.post('file_name')
+            'api' => '/s3browser/api/v1/download?bucket='.$this->property('bucket').'&object_key='.post('file_name')
         ];
-    }
-
-    public function onCopyAPIURL()
-    {
-        return post('api_url');
-    }
-
-    public function onDownload()
-    {
-        // lets download our file
-        $file_to_download = post('s3_key');
-
-        try {
-            // send object back
-            $object = $this->storage_client->getObject([
-                'Bucket' => $this->property('bucket'),
-                'Key' => $file_to_download
-            ]);
-
-            header("Content-Type: {$object['ContentType']}");
-            echo $object['Body'];
-        }
-        catch (S3Exception $e)
-        {
-            echo $e->getMessage() . PHP_EOL;
-        }
-
-        // file_put_contents($download_as_path, $object['Body']->getContents());
     }
 }
