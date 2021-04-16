@@ -1,7 +1,7 @@
 <div id=fileDetails>
     {% if s3_file_details.active %}
     <h4>Details</h4>
-    <table>
+    <table class="table table-sm table-hover">
         <tr>
             <th>Name</th>
             <td>{{s3_file_details.name}}</td>
@@ -10,10 +10,12 @@
             <th>API Path</th>
             <td>
                 <a id="copy-api-url" href="{{s3_file_details.api}}">
-                    {{s3_file_details.api}}
+                    {{str_limit(s3_file_details.api, 50)}}
                 </a>
-                <button onClick="copyAPIURL()">
-                    Copy
+                <button class="btn btn-sm shadow-0" onClick="copyAPIURL()" style="margin-left: 40px;">
+                    <i>
+                        copy
+                    </i>
                 </button>
             </td>
         </tr>

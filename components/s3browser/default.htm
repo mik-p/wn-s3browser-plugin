@@ -16,7 +16,7 @@
     {% endfor %}
 </p>
 
-<table>
+<table class="table table-sm table-hover">
     <tr>
         <th>Name</th>
         <th>Size</th>
@@ -36,7 +36,7 @@
     {% for object in __SELF__.getObjects() %}
     <tr>
         <td>
-            <a href="{{ __SELF__.property('baseuri') }}{{ last_crumb }}{{ prefix }}{{object.ShortName}}"
+            <a href="{{ __SELF__.property('baseuri') }}{{ last_crumb }}{{ prefix }}"
                 data-request="{{__SELF__}}::onFileDetails"
                 data-request-update="'{{ __SELF__ }}::file-details': '#fileDetails'"
                 data-request-data="file_name: '{{object.Key}}', short_name: '{{object.ShortName}}'">
