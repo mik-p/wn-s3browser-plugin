@@ -6,7 +6,7 @@ class Plugin extends PluginBase
 {
     public $elevated = true;
 
-	public $require = ['RainLab.User'];
+	public $require = ['Winter.User'];
 
     public function registerComponents()
     {
@@ -21,7 +21,7 @@ class Plugin extends PluginBase
             'settings' => [
                 'label'       => 'S3 Browser',
                 'description' => 'Manage S3 browser UI settings.',
-                'icon'        => 'oc-icon-folder-open-o',
+                'icon'        => 'wn-icon-folder-open-o',
                 'class'       => 'mikp\s3browser\Models\Settings',
                 'order'       => 600,
                 'keywords'    => 's3 data files',

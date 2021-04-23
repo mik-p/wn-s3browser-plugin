@@ -1,6 +1,6 @@
 {
-    "name": "mikp/oc-s3browser-plugin",
-    "description": "S3 browser plugin for October CMS",
+    "name": "mikp/wn-s3browser-plugin",
+    "description": "S3 browser plugin for Winter CMS",
     "type": "plugin",
     "license": "BSD-3",
     "authors": [

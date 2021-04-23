@@ -1,5 +1,5 @@
-# oc-s3browser-plugin
-S3 object browser plugin with htm components for october-cms
+# wn-s3browser-plugin
+S3 object browser plugin with htm components for winter-cms
 
 ## todo
 - add upload component

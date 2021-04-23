@@ -33,12 +33,43 @@ class API extends Controller
     }
 
     // routes
-    public function index()
+    public function index(Request $req)
     {
+        $content = '<h1>S3 Browser API</h1>';
+
+        $base_path = $req->path();
+        $content .= '<p>Base path: '.$base_path.'/'.'</p>';
+
+        $content .= '<p>Endpoints:</p>';
+
+        $content .= '<ul>';
+        $content .= '<li>'.$base_path.'/list/{bucket}'.'</li>';
+        $content .= '<li>'.$base_path.'/object'.'</li>';
+        $content .= '<li>'.$base_path.'/download'.'</li>';
+        $content .= '<li>'.$base_path.'/upload'.'</li>';
+        $content .= '</ul>';
+
         return Response::make(
-            '<h1>S3 Browser API</h1>',
+            $content,
             200
         );
+    }
+
+    public function list(Request $req, $bucket)
+    {
+        $keys = $this->listObjects($bucket);
+
+        return response()->json(['objects' => $keys]);
+    }
+
+    public function get_object(Request $req)
+    {
+        return Response::make('hi', 200);
+    }
+
+    public function post_object(Request $req)
+    {
+        return Response::make('hi', 200);
     }
 
     public function download(Request $req)
@@ -88,13 +119,22 @@ class API extends Controller
 
     public function upload($request)
     {
+        // read request url encoded parameters
+        $object_key = $req->query('object_key');
+        $bucket = $req->query('bucket');
+
+        if (!isset($bucket) || !isset($object_key))
+        {
+            return Response::make('bad request missing url parameters', 400);
+        }
+
         if(isset($_FILES['image'])){
-            $file_name = $_FILES['image']['name'];
+            // $file_name = $_FILES['image']['name'];
             $temp_file_location = $_FILES['image']['tmp_name'];
 
             $result = $this->storage_client->putObject([
-                'Bucket' => $this->property('bucket'),
-                'Key'    => $file_name,
+                'Bucket' => $bucket),
+                'Key'    => $object_key,
                 'SourceFile' => $temp_file_location
             ]);
 
@@ -129,6 +169,22 @@ class API extends Controller
     {
         $bucketListResponse = $this->storage_client->listBuckets();
         return $bucketListResponse['Buckets'];
+    }
+
+    public function listObjects($bucket)
+    {
+        $objectsListResponse = $this->storage_client->listObjects([
+            'Bucket' => $bucket
+        ]);
+
+        $object_keys = [];
+
+        foreach ($objectsListResponse['Contents'] as $object)
+        {
+            $object_keys[] = $object['Key'];
+        }
+
+        return $object_keys;
     }
 
     public function getObjects()

@@ -2,5 +2,5 @@ plugin:
     name: 'mikp.s3browser::lang.plugin.name'
     description: 'mikp.s3browser::lang.plugin.description'
     author: mik-p
-    icon: oc-icon-folder-open-o
+    icon: wn-icon-folder-open-o
     homepage: ''
