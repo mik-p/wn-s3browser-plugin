@@ -133,7 +133,7 @@ class API extends Controller
             $temp_file_location = $_FILES['image']['tmp_name'];
 
             $result = $this->storage_client->putObject([
-                'Bucket' => $bucket),
+                'Bucket' => $bucket,
                 'Key'    => $object_key,
                 'SourceFile' => $temp_file_location
             ]);

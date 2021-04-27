@@ -3,7 +3,7 @@
 use mikp\s3browser\Models\Settings;
 
 Route::group([
-    'prefix' => '/s3browser/api/v1',
+    'prefix' => '/api/v1/s3browser',
     'middleware' => [
         'api',
         'web',
