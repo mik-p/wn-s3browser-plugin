@@ -1,57 +1,15 @@
 <h1>Data Browser</h1>
 
 {% if __SELF__.activated %}
-<p>
-    <a href="{{ __SELF__.property('baseuri') }}">
-        {{ __SELF__.property('bucket') }}
-    </a>
 
-    {% set last_crumb='/' %}
-    {% for crumb in __SELF__.getBreadCrumbs() %}
-    /
-    <a href="{{ __SELF__.property('baseuri') }}{{ last_crumb }}{{crumb}}">
-        {{ crumb }}
-    </a>
-    {% set last_crumb=last_crumb~crumb~'/' %}
-    {% endfor %}
-</p>
-
-<table class="table table-sm table-hover">
-    <tr>
-        <th>Name</th>
-        <th>Size</th>
-        <th>Last Modified</th>
-    </tr>
-    {% for prefix in __SELF__.getPrefixes() %}
-    <tr>
-        <td>
-            <a href="{{ __SELF__.property('baseuri') }}{{ last_crumb }}{{ prefix }}">
-                {{prefix}}/
-            </a>
-        </td>
-        <td> -- </td>
-        <td> -- </td>
-    </tr>
-    {% endfor %}
-    {% for object in __SELF__.getObjects() %}
-    <tr>
-        <td>
-            <a href="{{ __SELF__.property('baseuri') }}{{ last_crumb }}{{ prefix }}"
-                data-request="{{__SELF__}}::onFileDetails"
-                data-request-update="'{{ __SELF__ }}::file-details': '#fileDetails'"
-                data-request-data="file_name: '{{object.Key}}', short_name: '{{object.ShortName}}'">
-                {{object.ShortName}}
-            </a>
-        </td>
-        <td>{{object.Size}} - Bytes</td>
-        <td>{{object.LastModified}}</td>
-    </tr>
-    {% endfor %}
-</table>
+{% partial __SELF__~'::file-list'%}
 
 <br />
+
 {% partial __SELF__~'::file-details'%}
 
 {% else %}
+
 <p>This service has not been activated by the system administrator</p>
+
 {% endif %}

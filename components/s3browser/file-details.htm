@@ -1,28 +1,32 @@
 <div id=fileDetails>
     {% if s3_file_details.active %}
-    <h4>Details</h4>
+    <h4>File Details</h4>
     <table class="table table-sm table-hover">
         <tr>
             <th>Name</th>
-            <td>{{s3_file_details.name}}</td>
+            <td>
+                {{s3_file_details.name}}
+            </td>
+            <td>
+                <a class="btn btn-sm shadow-0" href="{{s3_file_details.api_download}}">
+                    <i>download</i>
+                </a>
+            </td>
         </tr>
         <tr>
             <th>API Path</th>
             <td>
-                <a id="copy-api-url" href="{{s3_file_details.api}}">
-                    {{str_limit(s3_file_details.api, 50)}}
+                <a id="copy-api-url" href="{{s3_file_details.api_get}}" target="_blank" rel="noopener noreferrer">
+                    {{str_limit(s3_file_details.api_get, 50)}}
                 </a>
-                <button class="btn btn-sm shadow-0" onClick="copyAPIURL()" style="margin-left: 40px;">
-                    <i>
-                        copy
-                    </i>
+            </td>
+            <td>
+                <button class="btn btn-sm shadow-0" onClick="copyAPIURL()">
+                    <i>copy</i>
                 </button>
             </td>
         </tr>
     </table>
-    <a href="{{s3_file_details.api}}">
-        download
-    </a>
     {% endif %}
 </div>
 

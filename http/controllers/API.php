@@ -9,9 +9,10 @@ use Aws\S3\S3Client;
 
 use Auth;
 use App;
-// use Illuminate\Http\Response;
 use Response;
 use Illuminate\Http\Request;
+use Storage;
+use ZipArchive;
 
 class API extends Controller
 {
@@ -64,6 +65,31 @@ class API extends Controller
 
     public function get_object(Request $req)
     {
+        // read request url encoded parameters
+        $object_key = $req->query('object_key');
+        $bucket = $req->query('bucket');
+
+        if (!isset($bucket) || !isset($object_key))
+        {
+            return Response::make('bad request missing url parameters', 400);
+        }
+
+        try
+        {
+            // send object back
+            $object = $this->storage_client->getObject([
+                'Bucket' => $bucket,
+                'Key' => $object_key
+            ]);
+
+            // send file to browser as a download
+            return Response::make($object['Body'])->header('Content-Type', $object['ContentType']);
+        }
+        catch (S3Exception $e)
+        {
+            return Response::make($e->getMessage(), 500);
+        }
+
         return Response::make('hi', 200);
     }
 
@@ -114,10 +140,9 @@ class API extends Controller
         }
 
         return Response::make('not found', 404);
-        // App::abort(404, 'could not find resource');
     }
 
-    public function upload($request)
+    public function upload(Request $req)
     {
         // read request url encoded parameters
         $object_key = $req->query('object_key');
@@ -140,6 +165,100 @@ class API extends Controller
 
             var_dump($result);
         }
+    }
+
+    public function zip(Request $req)
+    {
+        // read request url encoded parameters
+        $prefix = $req->query('prefix');
+        $bucket = $req->query('bucket');
+
+        if (!isset($bucket) || !isset($prefix))
+        {
+            return Response::make('bad request missing url parameters', 400);
+        }
+
+        // get the list of objects in this folder
+        $objectsListResponse = $this->storage_client->listObjects([
+            'Bucket' => $bucket,
+            'Prefix' => ltrim($prefix, $prefix[0])
+        ]);
+
+        if (isset($objectsListResponse['Contents']))
+        {
+            if(count($objectsListResponse['Contents']) == 0)
+            {
+                // empty folder
+                return Response::make('folder is empty', 200);
+            }
+
+            // do some file system stuff
+            $temp_dir = 's3browser-zip-tmp';
+            Storage::makeDirectory($temp_dir);
+            Storage::delete(Storage::allFiles($temp_dir)); // clear the old request
+
+            // create a zip file name
+            $zip_file_name_end = date("Ymd-His").'.zip';
+            $zip_file_name_start = '';
+
+            foreach (explode('/', ltrim($prefix, $prefix[0])) as $crumb)
+            {
+                $zip_file_name_start .= $crumb.'-';
+            }
+
+            $zip_file_name = $zip_file_name_start.$zip_file_name_end;
+
+            // compress the files into a download-able zip
+            $zip = new ZipArchive;
+
+            if ($zip->open(Storage::path($temp_dir).'/'.$zip_file_name, ZipArchive::CREATE) === TRUE)
+            {
+                // download all the objects
+                foreach($objectsListResponse['Contents'] as $object)
+                {
+                    // make a file name
+                    $exploded_key = explode('/', $object['Key']);
+                    $file_name = end($exploded_key);
+                    array_pop($exploded_key);
+                    foreach ($exploded_key as $name_part)
+                    {
+                        $file_name = $name_part.'-'.$file_name;
+                    }
+
+                    // get the object
+                    $object = $this->storage_client->getObject([
+                        'Bucket' => $bucket,
+                        'Key' => $object['Key']
+                    ]);
+
+                    Storage::put($temp_dir.'/'.$file_name, $object['Body']);
+
+                    // Add File in ZipArchive
+                    $zip->addFile(Storage::path($temp_dir).'/'.$file_name, $file_name);
+                }
+
+                // close after done
+                $zip->close();
+            }
+
+            // Create Download Response
+            $zip_file_path = $temp_dir.'/'.$zip_file_name;
+
+            if(Storage::exists($zip_file_path))
+            {
+                return Response::streamDownload(
+                    function () use ($zip_file_path) {
+                        $zip_contents = Storage::get($zip_file_path);
+                        echo $zip_contents;
+                    },
+                    basename($zip_file_name)
+                );
+
+                // return Storage::download($zip_file_path);
+            }
+        }
+
+        return Response::make('not found', 404);
     }
 
     // helpers
@@ -179,103 +298,14 @@ class API extends Controller
 
         $object_keys = [];
 
-        foreach ($objectsListResponse['Contents'] as $object)
+        if (isset($objectsListResponse['Contents']))
         {
-            $object_keys[] = $object['Key'];
+            foreach ($objectsListResponse['Contents'] as $object)
+            {
+                $object_keys[] = $object['Key'];
+            }
         }
 
         return $object_keys;
-    }
-
-    public function getObjects()
-    {
-        $current_prefix = '';
-
-        if (is_string($this->property('prefix')))
-        {
-            $current_prefix = $this->property('prefix');
-        }
-
-        $objectsListResponse = $this->storage_client->listObjects([
-            'Bucket' => $this->property('bucket'),
-            'Prefix' => $current_prefix
-        ]);
-
-        $objects = [];
-
-        foreach ($objectsListResponse['Contents'] as $object) {
-
-            $unprefixed_key = $object['Key'];
-
-            if ($current_prefix != '')
-            {
-                $unprefixed_key = str_replace($current_prefix.'/', '', $object['Key']);
-            }
-
-            $exploded_key = explode('/', $unprefixed_key);
-
-            if (count($exploded_key) == 1)
-            {
-                $object['ShortName'] = $exploded_key[0];
-                $objects[] = $object;
-            }
-        }
-
-        return $objects;
-    }
-
-    public function getPrefixes()
-    {
-        $current_prefix = '';
-
-        if (is_string($this->property('prefix')))
-        {
-            $current_prefix = $this->property('prefix');
-        }
-
-        $objectsListResponse = $this->storage_client->listObjects([
-            'Bucket' => $this->property('bucket'),
-            'Prefix' => $current_prefix
-            //'Delimiter' => '/'
-        ]);
-
-        $crumbs = $this->getBreadCrumbs();
-
-        $prefixes = [];
-
-        foreach ($objectsListResponse['Contents'] as $object) {
-            $unprefixed_key = $object['Key'];
-
-            if ($current_prefix != '')
-            {
-                foreach ($crumbs as $crumb)
-                {
-                    $unprefixed_key = str_replace($crumb.'/', '', $unprefixed_key);
-                }
-            }
-
-            $exploded_key = explode('/', $unprefixed_key);
-
-            if (count($exploded_key) == 2)
-            {
-                $prefixes[] = $exploded_key[0];
-            }
-        }
-
-        return array_unique($prefixes);
-    }
-
-    public function getBreadCrumbs()
-    {
-        $current_prefix = '';
-
-        if (is_string($this->property('prefix')))
-        {
-            $current_prefix = $this->property('prefix');
-        }
-
-        $crumbs = explode('/', $current_prefix);
-
-        return $crumbs;
     }
 }

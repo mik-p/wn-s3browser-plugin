@@ -4,6 +4,8 @@ use Cms\Classes\ComponentBase;
 
 use mikp\s3browser\Models\Settings;
 
+use Event;
+
 use Aws\Exception\AwsException;
 use Aws\S3\S3Client;
 
@@ -20,6 +22,8 @@ class S3Browser extends ComponentBase
     public $access = '';
 
     public $secret = '';
+
+    public $api_basepath = '/api/v1/s3browser';
 
     public function componentDetails()
     {
@@ -114,22 +118,35 @@ class S3Browser extends ComponentBase
 
         $objects = [];
 
-        foreach ($objectsListResponse['Contents'] as $object) {
+        if (isset($objectsListResponse['Contents']))
+        {
 
-            $unprefixed_key = $object['Key'];
+            foreach ($objectsListResponse['Contents'] as $object) {
 
-            if ($current_prefix != '')
-            {
-                $unprefixed_key = str_replace($current_prefix.'/', '', $object['Key']);
+                $unprefixed_key = $object['Key'];
+
+                if ($current_prefix != '')
+                {
+                    $unprefixed_key = str_replace($current_prefix.'/', '', $object['Key']);
+                }
+
+                $exploded_key = explode('/', $unprefixed_key);
+
+                if (count($exploded_key) == 1)
+                {
+                    $object['ShortName'] = $exploded_key[0];
+                    $objects[] = $object;
+                }
             }
+        }
 
-            $exploded_key = explode('/', $unprefixed_key);
+        // allow events to modify the objects, this allows auth to be added
+        // $loc_event_resp = $this->fireEvent('getObjects', [$objects]);
+        $glob_event_resp = Event::fire('mikp.s3browser.getObjects', [$this, $objects]);
 
-            if (count($exploded_key) == 1)
-            {
-                $object['ShortName'] = $exploded_key[0];
-                $objects[] = $object;
-            }
+        if(!empty($glob_event_resp))
+        {
+            $objects = $glob_event_resp[0];
         }
 
         return $objects;
@@ -154,26 +171,40 @@ class S3Browser extends ComponentBase
 
         $prefixes = [];
 
-        foreach ($objectsListResponse['Contents'] as $object) {
-            $unprefixed_key = $object['Key'];
+        if (isset($objectsListResponse['Contents']))
+        {
+            foreach ($objectsListResponse['Contents'] as $object) {
+                $unprefixed_key = $object['Key'];
 
-            if ($current_prefix != '')
-            {
-                foreach ($crumbs as $crumb)
+                if ($current_prefix != '')
                 {
-                    $unprefixed_key = str_replace($crumb.'/', '', $unprefixed_key);
+                    foreach ($crumbs as $crumb)
+                    {
+                        $unprefixed_key = str_replace($crumb.'/', '', $unprefixed_key);
+                    }
                 }
-            }
 
-            $exploded_key = explode('/', $unprefixed_key);
+                $exploded_key = explode('/', $unprefixed_key);
 
-            if (count($exploded_key) >= 2)
-            {
-                $prefixes[] = $exploded_key[0];
+                if (count($exploded_key) >= 2)
+                {
+                    $prefixes[] = $exploded_key[0];
+                }
             }
         }
 
-        return array_unique($prefixes);
+        $prefixes = array_unique($prefixes);
+
+        // allow events to modify the prefixes, this allows auth to be added
+        // $loc_event_resp = $this->fireEvent('getPrefixes', [$prefixes]);
+        $glob_event_resp = Event::fire('mikp.s3browser.getPrefixes', [$this, $prefixes, $crumbs]);
+
+        if(!empty($glob_event_resp))
+        {
+            $prefixes = $glob_event_resp[0];
+        }
+
+        return $prefixes;
     }
 
     public function getBreadCrumbs()
@@ -196,7 +227,8 @@ class S3Browser extends ComponentBase
             'active' => true,
             'name' => post('short_name'),
             'path' => post('file_name'),
-            'api' => '/s3browser/api/v1/download?bucket='.$this->property('bucket').'&object_key='.post('file_name')
+            'api_download' => $this->api_basepath.'/download?bucket='.$this->property('bucket').'&object_key='.post('file_name'),
+            'api_get' => $this->api_basepath.'/object?bucket='.$this->property('bucket').'&object_key='.post('file_name')
         ];
     }
 }

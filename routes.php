@@ -27,4 +27,7 @@ Route::group([
 
         // upload objects as files
         Route::post('/upload', 'mikp\s3browser\Http\Controllers\API@upload');
+
+        // download a zip file of objects
+        Route::get('/zip', 'mikp\s3browser\Http\Controllers\API@zip');
 });

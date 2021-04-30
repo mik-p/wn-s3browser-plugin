@@ -1,0 +1,67 @@
+<!-- prefix crumbs -->
+<p id="s3browser-crumb">
+    <a href="{{ __SELF__.property('baseuri') }}">
+        {{ __SELF__.property('bucket') }}
+    </a>
+
+    {% set last_crumb='/' %}
+    {% for crumb in __SELF__.getBreadCrumbs() %}
+    /
+    <a href="{{ __SELF__.property('baseuri') }}{{ last_crumb }}{{ crumb }}">
+        {{ crumb }}
+    </a>
+    {% set last_crumb=last_crumb~crumb~'/' %}
+    {% endfor %}
+</p>
+
+<!-- file list view -->
+<table id="s3browser-files" class="table table-sm table-hover">
+    <!-- table headers -->
+    <tr>
+        <th style="padding-left: 0px; padding-right: 0px;"></th>
+        <th>Name</th>
+        <th>Size</th>
+        <th>Last Modified</th>
+    </tr>
+    <!-- folders in the list -->
+    {% for prefix in __SELF__.getPrefixes() %}
+    <tr>
+        <td class="text-center" style="padding-left: 0px; padding-right: 0px;">
+            <a id="s3browser-download-btn" class="btn btn-sm shadow-0"
+                href="{{ __SELF__.api_basepath }}/zip?bucket={{ __SELF__.property('bucket') }}&prefix={{ last_crumb }}{{ prefix }}"
+                target="_blank" rel="noopener noreferrer">
+                <i class="fas fa-cloud-download-alt"></i>
+            </a>
+        </td>
+        <td>
+            <a href="{{ __SELF__.property('baseuri') }}{{ last_crumb }}{{ prefix }}">
+                {{prefix}}/
+            </a>
+        </td>
+        <td> -- </td>
+        <td> -- </td>
+    </tr>
+    {% endfor %}
+    <!-- files in the list -->
+    {% for object in __SELF__.getObjects() %}
+    <tr>
+        <td class="text-center" style="padding-left: 0px; padding-right: 0px;">
+            <a id="s3browser-download-btn" class="btn btn-sm shadow-0"
+                href="{{ __SELF__.api_basepath }}/download?bucket={{ __SELF__.property('bucket') }}&object_key={{ object.Key }}"
+                target="_blank" rel="noopener noreferrer">
+                <i class="fas fa-cloud-download-alt"></i>
+            </a>
+        </td>
+        <td>
+            <a href="{{ __SELF__.property('baseuri') }}{{ last_crumb }}{{ prefix }}"
+                data-request="{{ __SELF__ }}::onFileDetails"
+                data-request-update="'{{ __SELF__ }}::file-details': '#fileDetails'"
+                data-request-data="file_name: '{{ object.Key }}', short_name: '{{ object.ShortName }}'">
+                {{object.ShortName}}
+            </a>
+        </td>
+        <td>{{object.Size}} - Bytes</td>
+        <td>{{object.LastModified}}</td>
+    </tr>
+    {% endfor %}
+</table>
