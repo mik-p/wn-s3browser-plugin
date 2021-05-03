@@ -48,6 +48,7 @@ class API extends Controller
         $content .= '<li>'.$base_path.'/object'.'</li>';
         $content .= '<li>'.$base_path.'/download'.'</li>';
         $content .= '<li>'.$base_path.'/upload'.'</li>';
+        $content .= '<li>'.$base_path.'/zip'.'</li>';
         $content .= '</ul>';
 
         return Response::make(
@@ -56,6 +57,7 @@ class API extends Controller
         );
     }
 
+    // list full path of objects in a bucket
     public function list(Request $req, $bucket)
     {
         $keys = $this->listObjects($bucket);
@@ -63,6 +65,7 @@ class API extends Controller
         return response()->json(['objects' => $keys]);
     }
 
+    // get an object as a http response body
     public function get_object(Request $req)
     {
         // read request url encoded parameters
@@ -90,12 +93,65 @@ class API extends Controller
             return Response::make($e->getMessage(), 500);
         }
 
-        return Response::make('hi', 200);
+        return Response::make('not found', 404);
     }
 
+    // post an object as a http request body
     public function post_object(Request $req)
     {
-        return Response::make('hi', 200);
+        // read request url encoded parameters
+        $object_key = $req->input('object_key');
+        $bucket = $req->input('bucket');
+
+        if (!isset($bucket) || !isset($object_key))
+        {
+            return Response::make('bad request missing url parameters', 400);
+        }
+
+        // file missing from request
+        if (!$req->hasFile('filename'))
+        {
+            return Response::make('bad request - missing file for upload', 400);
+        }
+
+        // check if file encdoding matches
+        $file_name_in_key = explode('/', $object_key);
+        $file_name_in_key = end($file_name_in_key);
+        $file_name_in_key_split = explode('.', $file_name_in_key);
+        if (count($file_name_in_key_split) < 2)
+        {
+            return Response::make('bad request - improper file name or extension given: "'.$file_name_in_key.'"', 400);
+        }
+
+        $file_extension = end($file_name_in_key_split);
+
+        if ($req->filename->extension() != $file_extension)
+        {
+            return Response::make('bad request - file extension does not match named extension: "'.$req->filename->extension().'", "'.$file_extension.'"', 400);
+        }
+
+        // upload the file to s3
+        try
+        {
+            $result = $this->storage_client->putObject([
+                'Bucket' => $bucket,
+                'Key'    => $object_key,
+                'SourceFile' => $req->filename->path(),
+                'ContentType' => $req->filename->getMimeType()
+            ]);
+
+            return Response::json([
+                'statusCode' => $result['@metadata']['statusCode'],
+                'object_key' => $object_key,
+                'content_type' => $req->filename->getMimeType()
+            ]);
+        }
+        catch (S3Exception $e)
+        {
+            return Response::make($e->getMessage(), 500);
+        }
+
+        return Response::make('something went wrong', 500);
     }
 
     public function download(Request $req)
@@ -145,26 +201,48 @@ class API extends Controller
     public function upload(Request $req)
     {
         // read request url encoded parameters
-        $object_key = $req->query('object_key');
-        $bucket = $req->query('bucket');
+        $bucket = $req->input('bucket');
 
-        if (!isset($bucket) || !isset($object_key))
+        if (!isset($bucket))
         {
             return Response::make('bad request missing url parameters', 400);
         }
 
-        if(isset($_FILES['image'])){
-            // $file_name = $_FILES['image']['name'];
-            $temp_file_location = $_FILES['image']['tmp_name'];
+        // file missing from request
+        if (!$req->hasFile('filename'))
+        {
+            return Response::make('bad request - missing file for upload', 400);
+        }
 
+        return Response::make($req->filename, 200);
+
+        // upload the file to s3
+        try
+        {
             $result = $this->storage_client->putObject([
                 'Bucket' => $bucket,
-                'Key'    => $object_key,
-                'SourceFile' => $temp_file_location
+                'Key'    => $req->filename->getClientOriginalName(),
+                'SourceFile' => $req->filename->path(),
+                'ContentType' => $req->filename->getMimeType()
             ]);
 
-            var_dump($result);
+            if ($result['@metadata']['statusCode'] != 200)
+            {
+                return Response::make('upload of file xxx failed', 500);
+            }
+
+            return Response::json([
+                'statusCode' => $result['@metadata']['statusCode'],
+                // 'object_key' => $object_key,
+                'content_type' => $req->filename->getMimeType()
+            ]);
         }
+        catch (S3Exception $e)
+        {
+            return Response::make($e->getMessage(), 500);
+        }
+
+        return Response::make('something went wrong', 500);
     }
 
     public function zip(Request $req)
