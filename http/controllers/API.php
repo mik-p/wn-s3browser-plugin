@@ -154,6 +154,7 @@ class API extends Controller
         return Response::make('something went wrong', 500);
     }
 
+    // download an object as a file
     public function download(Request $req)
     {
         // read request url encoded parameters
@@ -198,9 +199,11 @@ class API extends Controller
         return Response::make('not found', 404);
     }
 
+    // upload objects to a given location
     public function upload(Request $req)
     {
         // read request url encoded parameters
+        $prefix = $req->input('prefix');
         $bucket = $req->input('bucket');
 
         if (!isset($bucket))
@@ -214,6 +217,11 @@ class API extends Controller
             return Response::make('bad request - missing file for upload', 400);
         }
 
+        if (!isset($prefix))
+        {
+            $prefix = '';
+        }
+
         return Response::make($req->filename, 200);
 
         // upload the file to s3
@@ -221,7 +229,7 @@ class API extends Controller
         {
             $result = $this->storage_client->putObject([
                 'Bucket' => $bucket,
-                'Key'    => $req->filename->getClientOriginalName(),
+                'Key'    => $prefix.'/'.$req->filename->getClientOriginalName(),
                 'SourceFile' => $req->filename->path(),
                 'ContentType' => $req->filename->getMimeType()
             ]);
@@ -245,6 +253,7 @@ class API extends Controller
         return Response::make('something went wrong', 500);
     }
 
+    // download objects from a given location
     public function zip(Request $req)
     {
         // read request url encoded parameters

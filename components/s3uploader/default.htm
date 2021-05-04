@@ -1,4 +1,7 @@
-<form action="<?= $_SERVER['PHP_SELF']; ?>" method="POST" enctype="multipart/form-data">
-    <input type="file" name="image" />
+<h4>File Uploader</h4>
+<form action="{{ __SELF__.api_basepath }}/upload?bucket={{ __SELF__.property('bucket') }}" method="POST"
+    enctype="multipart/form-data">
+    <input type="text" name="prefix" placeholder="prefix" />
+    <input type="file" multiple="multiple" name="filename[]" />
     <input type="submit" />
 </form>
