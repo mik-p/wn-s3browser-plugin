@@ -208,13 +208,13 @@ class API extends Controller
 
         if (!isset($bucket))
         {
-            return Response::make('bad request missing url parameters', 400);
+            return Response::make('bad request - missing url parameters', 400);
         }
 
         // file missing from request
         if (!$req->hasFile('filename'))
         {
-            return Response::make('bad request - missing file for upload', 400);
+            return Response::make('bad request - missing files for upload', 400);
         }
 
         if (!isset($prefix))
@@ -222,35 +222,37 @@ class API extends Controller
             $prefix = '';
         }
 
-        return Response::make($req->filename, 200);
-
         // upload the file to s3
-        try
-        {
-            $result = $this->storage_client->putObject([
-                'Bucket' => $bucket,
-                'Key'    => $prefix.'/'.$req->filename->getClientOriginalName(),
-                'SourceFile' => $req->filename->path(),
-                'ContentType' => $req->filename->getMimeType()
-            ]);
+        $successful_uploads = [];
 
-            if ($result['@metadata']['statusCode'] != 200)
+        foreach ($req->filename as $file_name)
+        {
+            try
             {
-                return Response::make('upload of file xxx failed', 500);
+                $result = $this->storage_client->putObject([
+                    'Bucket' => $bucket,
+                    'Key'    => $prefix.'/'.$file_name->getClientOriginalName(),
+                    'SourceFile' => $file_name->path(),
+                    'ContentType' => $file_name->getMimeType()
+                ]);
+
+                if ($result['@metadata']['statusCode'] != 200)
+                {
+                    return Response::make('upload of file "'.$file_name->getClientOriginalName().'" failed', 500);
+                }
+
+                $successful_uploads[] = [
+                    'file' => $file_name->getClientOriginalName(),
+                    'status' => $result['@metadata']['statusCode']
+                ];
             }
-
-            return Response::json([
-                'statusCode' => $result['@metadata']['statusCode'],
-                // 'object_key' => $object_key,
-                'content_type' => $req->filename->getMimeType()
-            ]);
-        }
-        catch (S3Exception $e)
-        {
-            return Response::make($e->getMessage(), 500);
+            catch (S3Exception $e)
+            {
+                return Response::make($e->getMessage(), 500);
+            }
         }
 
-        return Response::make('something went wrong', 500);
+        return Response::json($successful_uploads);
     }
 
     // download objects from a given location
