@@ -1,7 +1,7 @@
-<h4>File Uploader</h4>
-<form action="{{ __SELF__.api_basepath }}/upload?bucket={{ __SELF__.property('bucket') }}" method="POST"
-    enctype="multipart/form-data">
-    <input type="text" name="prefix" placeholder="prefix" />
-    <input type="file" multiple="multiple" name="filename[]" />
-    <input type="submit" />
-</form>
+<div id="s3-file-uploader">
+    <h4>File Uploader</h4>
+
+    <br />
+
+    {% partial __SELF__~'::upload-form'%}
+</div>

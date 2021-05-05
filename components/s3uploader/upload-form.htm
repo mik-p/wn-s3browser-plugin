@@ -1,0 +1,51 @@
+<form id="s3-upload-form" action="{{ __SELF__.api_basepath }}/upload?bucket={{ __SELF__.property('bucket') }}"
+    method="POST" enctype="multipart/form-data">
+    <div class="form-outline mb-3">
+        <i class="far fa-folder-open trailing"></i>
+        <input id="s3-upload-file-prefix" class="form-control" type="text" name="prefix" placeholder="Path Prefix"
+            autocomplete="off" />
+        <label class="form-label" for="s3-upload-file-prefix">Path Prefix</label>
+    </div>
+    <!-- <label for="s3-upload-file-input" class="form-label">Select multiple files</label> -->
+    <input id="s3-upload-file-input" class="form-control mb-3" type="file" multiple="multiple" name="filename[]" />
+    <!-- <input class="btn" type="submit" /> -->
+    <button class="btn btn-sm shadow-0" type="submit" value="SUBMIT" form="s3-upload-form">
+        <i class="fas fa-cloud-upload-alt"></i>
+        Upload
+    </button>
+</form>
+
+{% put scripts %}
+<script>
+    jQuery(function () {
+        jQuery('#s3-upload-form').on('submit', function (e) {
+            e.preventDefault();
+
+            let form_data = new FormData(this);
+
+            jQuery.ajax({
+                url: jQuery(this).attr("action"),
+                type: jQuery(this).attr("method"),
+                enctype: jQuery(this).attr("enctype"),
+                timeout: 3600,
+                data: form_data,
+                contentType: false,
+                cache: false,
+                processData: false,
+                success: function (data) {
+                    let message = "Successfully Uploaded:\n";
+
+                    data.forEach(element => {
+                        message += "\t-" + element.file + "\n";
+                    });
+
+                    alert(message);
+                },
+                error: function (data) {
+                    alert(data.responseText);
+                }
+            });
+        });
+    });
+</script>
+{% endput %}
