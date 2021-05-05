@@ -6,9 +6,7 @@
             autocomplete="off" />
         <label class="form-label" for="s3-upload-file-prefix">Path Prefix</label>
     </div>
-    <!-- <label for="s3-upload-file-input" class="form-label">Select multiple files</label> -->
     <input id="s3-upload-file-input" class="form-control mb-3" type="file" multiple="multiple" name="filename[]" />
-    <!-- <input class="btn" type="submit" /> -->
     <button class="btn btn-sm shadow-0" type="submit" value="SUBMIT" form="s3-upload-form">
         <i class="fas fa-cloud-upload-alt"></i>
         Upload
@@ -36,7 +34,7 @@
                     let message = "Successfully Uploaded:\n";
 
                     data.forEach(element => {
-                        message += "\t-" + element.file + "\n";
+                        message += "   - " + element.file + "\n";
                     });
 
                     alert(message);
