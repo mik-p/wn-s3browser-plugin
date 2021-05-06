@@ -12,7 +12,8 @@ class Plugin extends PluginBase
     {
         return [
             'mikp\s3browser\Components\s3browser' => 's3browser',
-            'mikp\s3browser\Components\s3uploader' => 's3uploader'
+            'mikp\s3browser\Components\s3uploader' => 's3uploader',
+            'mikp\s3browser\Components\s3query' => 's3query'
         ];
     }
 

@@ -350,6 +350,119 @@ class API extends Controller
         return Response::make('not found', 404);
     }
 
+    // use s3 select api
+    public function select(Request $req)
+    {
+        // read request url encoded parameters
+        $bucket = $req->query('bucket');
+        $object_key = $req->query('object_key');
+        $select_query = $req->query('query');
+
+        if (!isset($bucket) || !isset($object_key) || !isset($select_query))
+        {
+            return Response::make('bad request - missing url parameters', 400);
+        }
+
+        if (empty($select_query))
+        {
+            return Response::make('bad request - query is empty', 400);
+        }
+
+        try
+        {
+            // retain header
+            $result = $this->storage_client->selectObjectContent([
+                'Bucket' => $bucket,
+                'Key' => $object_key,
+
+                'ExpressionType' => 'SQL',
+                'Expression' => 'select * from s3object limit 1',
+
+                'InputSerialization' => [
+                    'CSV' => [
+                        'FileHeaderInfo' => 'NONE',
+                        'RecordDelimiter' => '\n',
+                        'FieldDelimiter' => ',',
+                    ]
+                ],
+
+                'OutputSerialization' => ['CSV' => []]
+            ]);
+
+            foreach ($result['Payload'] as $event)
+            {
+                if (isset($event['Records']))
+                {
+                    $data_header = (string) $event['Records']['Payload'];
+                }
+                elseif (isset($event['Stats']))
+                {
+                }
+                elseif (isset($event['End']))
+                {
+                }
+            }
+
+            // filter the headings that aren't needed
+            $valid_headings = [];
+
+            foreach (explode(',', $data_header) as $heading)
+            {
+                if (str_contains($select_query, $heading))
+                {
+                    $valid_headings[] = $heading;
+                }
+            }
+
+            // perform the actual query
+            $result = $this->storage_client->selectObjectContent([
+                'Bucket' => $bucket,
+                'Key' => $object_key,
+
+                'ExpressionType' => 'SQL',
+                'Expression' => $select_query,
+
+                'InputSerialization' => [
+                    'CSV' => [
+                        'FileHeaderInfo' => 'USE',
+                        'RecordDelimiter' => '\n',
+                        'FieldDelimiter' => ',',
+                    ]
+                ],
+
+                'OutputSerialization' => ['CSV' => []]
+            ]);
+
+            $response_json = ['select_query' => $select_query];
+            $response_json = ['data_header' => $data_header];
+            $response_json = ['headings' => $valid_headings];
+
+            foreach ($result['Payload'] as $event)
+            {
+                if (isset($event['Records']))
+                {
+                    $response_json['records'][] = (string) $event['Records']['Payload'];
+                }
+                elseif (isset($event['Stats']))
+                {
+                    $response_json['stats'] = 'Processed '.$event['Stats']['Details']['BytesProcessed'].' bytes';
+                }
+                elseif (isset($event['End']))
+                {
+                    $response_json['end'] = 'Complete';
+                }
+            }
+
+            return Response::json($response_json);
+        }
+        catch (S3Exception $e)
+        {
+            return Response::make($e->getMessage(), 500);
+        }
+
+        return Response::make('something went wrong', 500);
+    }
+
     // helpers
     public function createS3Client ()
     {

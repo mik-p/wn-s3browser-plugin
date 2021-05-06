@@ -1,0 +1,104 @@
+<form id="s3-query-form" class="mb-3" action="{{ __SELF__.api_basepath }}/select" method="GET">
+    <input id="s3-query-bucket-input" type="hidden" name="bucket" value="{{ __SELF__.property('bucket') }}">
+    <div class="form-outline mb-3">
+        <i class="far fa-folder-open trailing">
+            /
+            <i class="far fa-file"></i>
+        </i>
+        <input id="s3-query-object-key" class="form-control" type="text" name="object_key" placeholder="Object Path"
+            autocomplete="off" />
+        <label class="form-label" for="s3-query-object-key">Object Path</label>
+    </div>
+    <div class="form-outline mb-3">
+        <i class="fas fa-star-of-life trailing"></i>
+        <input id="s3-query-select" class="form-control" type="text" name="query"
+            placeholder="eg. SELECT * FROM s3object" autocomplete="off" />
+        <label class="form-label" for="s3-query-select">Query</label>
+    </div>
+    <button id="s3-query-submit-btn" class="btn btn-sm shadow-0" type="submit" value="SUBMIT" form="s3-query-form">
+        submit
+        <i class="fas fa-layer-group"></i>
+    </button>
+</form>
+
+<div id="s3-query-result-display"></div>
+
+{% put scripts %}
+<script>
+    jQuery('#s3-query-object-key').prop("value", "test.csv");
+    jQuery('#s3-query-select').prop("value", 'select " Row"," Col"," Max NDRE" from s3object where " Max NDRE" > 0.7');
+
+    jQuery(function () {
+        jQuery('#s3-query-form').on('submit', function (e) {
+            e.preventDefault();
+
+            jQuery('#s3-query-submit-btn').prop("disabled", true);
+
+            jQuery.ajax({
+                url: jQuery(this).attr("action"),
+                type: jQuery(this).attr("method"),
+                timeout: 3600,
+                data: jQuery(this).serialize(),
+                success: function (data) {
+                    console.log(data);
+
+                    jQuery('#s3-query-result-display').replaceWith('<div id="s3-query-result-display"></div>');
+                    jQuery('#s3-query-result-display').append("<h5>Successful Query:</h5>");
+
+                    // process returned records
+                    data.records.forEach(element => {
+
+                        // create an array from the record string
+                        let records = [];
+                        let record = '';
+
+                        for (let i = 0; i < element.length; i++) {
+                            if (element[i] == '\n') {
+                                records.push(record.split(','));
+                                record = '';
+                            }
+                            else {
+                                record += element[i];
+                            }
+                        }
+
+                        // iterate the records array and add html tags
+                        let table_rows = '';
+
+                        // get the headings
+                        let heading_row = '';
+
+                        data.headings.forEach(heading => {
+                            heading_row += "<th>" + heading + "</th>";
+                        });
+
+                        // get the data
+                        records.forEach(row => {
+                            let table_row_data = '';
+
+                            row.forEach(td => {
+                                table_row_data += "<td>" + td + "</td>";
+                            });
+
+                            table_rows += "<tr>" + table_row_data + "</tr>";
+                        });
+
+                        jQuery('#s3-query-result-display').append(
+                            '<table class="table table-sm table-hover table-striped" style="max-height: 70;">'
+                            + "<thead><tr>" + heading_row + "</tr></thead>"
+                            + "<tbody>" + table_rows + "</tbody>"
+                            + '</table>'
+                        );
+
+                    });
+                },
+                error: function (data) {
+                    alert(data.responseText);
+                }
+            });
+
+            jQuery('#s3-query-submit-btn').prop("disabled", false);
+        });
+    });
+</script>
+{% endput %}

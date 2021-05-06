@@ -30,4 +30,7 @@ Route::group([
 
         // download a zip file of objects
         Route::get('/zip', 'mikp\s3browser\Http\Controllers\API@zip');
+
+        // use s3 select api on bucket objects
+        Route::get('/select', 'mikp\s3browser\Http\Controllers\API@select');
 });
