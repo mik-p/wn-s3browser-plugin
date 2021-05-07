@@ -1,3 +1,4 @@
+<!-- default form -->
 <form id="s3-query-form" class="mb-3" action="{{ __SELF__.api_basepath }}/select" method="GET">
     <input id="s3-query-bucket-input" type="hidden" name="bucket" value="{{ __SELF__.property('bucket') }}">
     <div class="form-outline mb-3">
@@ -21,8 +22,10 @@
     </button>
 </form>
 
+<!-- result display -->
 <div id="s3-query-result-display"></div>
 
+<!-- controls -->
 {% put scripts %}
 <script>
     jQuery('#s3-query-object-key').prop("value", "test.csv");
@@ -83,11 +86,14 @@
                             table_rows += "<tr>" + table_row_data + "</tr>";
                         });
 
+                        // add table to view
                         jQuery('#s3-query-result-display').append(
-                            '<table class="table table-sm table-hover table-striped" style="max-height: 70;">'
+                            '<div class="container" style="max-height: 30rem; overflow: scroll;">'
+                            + '<table class="table table-sm table-hover table-striped" style="max-height: 30rem; overflow: scroll;">'
                             + "<thead><tr>" + heading_row + "</tr></thead>"
                             + "<tbody>" + table_rows + "</tbody>"
                             + '</table>'
+                            + '</div>'
                         );
 
                     });
