@@ -28,9 +28,6 @@
 <!-- controls -->
 {% put scripts %}
 <script>
-    jQuery('#s3-query-object-key').prop("value", "test.csv");
-    jQuery('#s3-query-select').prop("value", 'select " Row"," Col"," Max NDRE" from s3object where " Max NDRE" > 0.7');
-
     jQuery(function () {
         jQuery('#s3-query-form').on('submit', function (e) {
             e.preventDefault();
