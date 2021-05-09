@@ -473,17 +473,20 @@ class API extends Controller
         $this->access = Settings::get('s3accesskey', 'no-access');
         $this->secret = Settings::get('s3secretkey', 'no-secret');
 
-        // connect to s3 with given credentials
-        $this->storage_client = new S3Client([
-            'version' => 'latest',
-            'region'  => $this->region,
-            'endpoint' => $this->url,
-            'use_path_style_endpoint' => true,
-            'credentials' => [
-                    'key'    => $this->access,
-                    'secret' => $this->secret,
-                ],
-        ]);
+        if ($this->activated)
+        {
+            // connect to s3 with given credentials
+            $this->storage_client = new S3Client([
+                'version' => 'latest',
+                'region'  => $this->region,
+                'endpoint' => $this->url,
+                'use_path_style_endpoint' => true,
+                'credentials' => [
+                        'key'    => $this->access,
+                        'secret' => $this->secret,
+                    ],
+            ]);
+        }
     }
 
     public function listBuckets()
