@@ -1,36 +1,77 @@
-<div id=fileDetails>
+<div id=fileDetails class="card shadow-4">
     {% if s3_file_details.active %}
-    <h4>File Details</h4>
-    <table class="table table-sm table-hover">
-        <tr>
-            <th>Name</th>
-            <td>
-                {{s3_file_details.name}}
-            </td>
-            <td>
-                <a class="btn btn-sm shadow-0" href="{{s3_file_details.api_download}}">
-                    <i>download</i>
-                </a>
-            </td>
-        </tr>
-        <tr>
-            <th>API Path</th>
-            <td>
-                <a id="copy-api-url" href="{{s3_file_details.api_get}}" target="_blank" rel="noopener noreferrer">
-                    {{str_limit(s3_file_details.api_get, 50)}}
-                </a>
-            </td>
-            <td>
-                <button class="btn btn-sm shadow-0" onClick="copyAPIURL()">
-                    <i>copy</i>
-                </button>
-            </td>
-        </tr>
-    </table>
+    <h4 class="card-header">
+        <button id="file-details-close-btn" class="btn btn-sm shadow-0" onclick="closeBtn()">
+            <i class="fas fa-times fa-lg"></i>
+        </button>
+        File Details
+    </h4>
+    <div class="card-body">
+        <table class="table table-sm table-hover">
+            <tr>
+                <th>Name</th>
+                <td>
+                    {{s3_file_details.name}}
+                </td>
+                <td>
+                    <a class="btn btn-sm shadow-0" href="{{s3_file_details.api_download}}">
+                        <i>download</i>
+                    </a>
+                </td>
+            </tr>
+            <tr>
+                <th>Key</th>
+                <td id="copy-file-key" value="{{ s3_file_details.path }}">
+                    {{ s3_file_details.path }}
+                </td>
+                <td>
+                    <button class="btn btn-sm shadow-0" onClick="copyFileKey()">
+                        <i>copy</i>
+                    </button>
+                </td>
+            </tr>
+            <tr>
+                <th>API Path</th>
+                <td>
+                    <a id="copy-api-url" href="{{s3_file_details.api_get}}" target="_blank" rel="noopener noreferrer">
+                        {{str_limit(s3_file_details.api_get, 50)}}
+                    </a>
+                </td>
+                <td>
+                    <button class="btn btn-sm shadow-0" onClick="copyAPIURL()">
+                        <i>copy</i>
+                    </button>
+                </td>
+            </tr>
+        </table>
+    </div>
     {% endif %}
 </div>
 
+{% put scripts %}
 <script>
+    function closeBtn() {
+        document.getElementById("fileDetails").hidden = true;
+    }
+
+    function copyFileKey() {
+        // create an input element
+        var apiURL = document.body.appendChild(document.createElement("input"));
+        apiURL.value = document.getElementById("copy-file-key").getAttribute("value");
+
+        // set the window to get this element data
+        apiURL.focus();
+        apiURL.select();
+
+        // copy
+        document.execCommand('copy');
+
+        // remove the input when done
+        apiURL.parentNode.removeChild(apiURL);
+
+        jQuery.wn.flashMsg({ text: "Copied Key!", class: 'success' })
+    }
+
     function copyAPIURL() {
         // create an input element
         var apiURL = document.body.appendChild(document.createElement("input"));
@@ -46,6 +87,7 @@
         // remove the input when done
         apiURL.parentNode.removeChild(apiURL);
 
-        alert("Copied URL!");
+        jQuery.wn.flashMsg({ text: "Copied API URL!", class: 'success' })
     }
 </script>
+{% endput %}

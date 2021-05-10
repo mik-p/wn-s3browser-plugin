@@ -56,7 +56,8 @@
             <a href="{{ __SELF__.property('baseuri') }}{{ last_crumb }}{{ prefix }}"
                 data-request="{{ __SELF__ }}::onFileDetails"
                 data-request-update="'{{ __SELF__ }}::file-details': '#fileDetails'"
-                data-request-data="file_name: '{{ object.Key }}', short_name: '{{ object.ShortName }}'">
+                data-request-data="file_name: '{{ object.Key }}', short_name: '{{ object.ShortName }}'"
+                data-request-success="document.getElementById('fileDetails').hidden = false;">
                 {{object.ShortName}}
             </a>
         </td>
