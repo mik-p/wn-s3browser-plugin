@@ -49,6 +49,7 @@ class API extends Controller
         $content .= '<li>'.$base_path.'/download'.'</li>';
         $content .= '<li>'.$base_path.'/upload'.'</li>';
         $content .= '<li>'.$base_path.'/zip'.'</li>';
+        $content .= '<li>'.$base_path.'/select'.'</li>';
         $content .= '</ul>';
 
         return Response::make(
@@ -406,11 +407,18 @@ class API extends Controller
             // filter the headings that aren't needed
             $valid_headings = [];
 
-            foreach (explode(',', $data_header) as $heading)
+            if (str_contains($select_query, '*'))
             {
-                if (str_contains($select_query, $heading))
+                $valid_headings = explode(',', $data_header);
+            }
+            else
+            {
+                foreach (explode(',', $data_header) as $heading)
                 {
-                    $valid_headings[] = $heading;
+                    if (str_contains($select_query, $heading))
+                    {
+                        $valid_headings[] = $heading;
+                    }
                 }
             }
 
