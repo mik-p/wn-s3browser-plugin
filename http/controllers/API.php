@@ -7,6 +7,8 @@ use mikp\s3browser\Models\Settings;
 use Aws\Exception\AwsException;
 use Aws\S3\S3Client;
 
+use PHPSQLParser\PHPSQLParser;
+
 use Auth;
 use App;
 use Response;
@@ -369,6 +371,9 @@ class API extends Controller
             return Response::make('bad request - query is empty', 400);
         }
 
+        $parser = new PHPSQLParser();
+        $parsed_query = $parser->parse($select_query);
+
         try
         {
             // retain header
@@ -407,7 +412,9 @@ class API extends Controller
             // filter the headings that aren't needed
             $valid_headings = [];
 
-            if (str_contains($select_query, '*'))
+            $base_expr_star = str_contains($parsed_query["SELECT"][0]["base_expr"], "*");
+
+            if ($base_expr_star)
             {
                 $valid_headings = explode(',', $data_header);
             }
@@ -441,9 +448,12 @@ class API extends Controller
                 'OutputSerialization' => ['CSV' => []]
             ]);
 
-            $response_json = ['select_query' => $select_query];
-            $response_json = ['data_header' => $data_header];
-            $response_json = ['headings' => $valid_headings];
+            $response_json = [
+                'select_query_str' => $select_query,
+                'select_query_obj' => $parser->parse($select_query),
+                'data_header' => $data_header,
+                'headings' => $valid_headings
+            ];
 
             foreach ($result['Payload'] as $event)
             {

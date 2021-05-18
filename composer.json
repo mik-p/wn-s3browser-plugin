@@ -10,6 +10,7 @@
         }
     ],
     "require": {
-        "aws/aws-sdk-php": "^3.178"
+        "aws/aws-sdk-php": "^3.178",
+        "greenlion/php-sql-parser": "^4.4"
     }
 }
