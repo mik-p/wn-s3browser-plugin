@@ -20,10 +20,10 @@
         <button id="s3-query-submit-btn" class="btn" type="submit" value="SUBMIT" form="s3-query-form">
             <span>submit</span> <i class="fas fa-layer-group"></i>
         </button>
-        <button id="s3-query-api-copy" class="btn" type="button" onclick="selectCopyAPIURL()">
+        <button id="s3-query-api-copy" class="btn" type="button">
             <span>copy api</span> <i class="fas fa-copy"></i>
         </button>
-        <button id="s3-query-download" class="btn" type="button" onclick="selectDownloadResult()">
+        <button id="s3-query-download" class="btn" type="button">
             <span>download result</span> <i class="fas fa-file-csv"></i>
         </button>
     </div>
@@ -35,6 +35,65 @@
 <!-- controls -->
 {% put scripts %}
 <script>
+    // buttons
+    // copy api
+    jQuery(function () {
+        jQuery('#s3-query-api-copy').on('click', function (e) {
+            e.preventDefault();
+
+            // todo
+
+            jQuery.wn.flashMsg({ text: 'copied API request!', class: 'success' })
+        });
+    });
+
+    // download result
+    jQuery(function () {
+        jQuery('#s3-query-download').on('click', function (e) {
+            e.preventDefault();
+
+            jQuery.wn.flashMsg({ text: 'downloading table as a .csv file', class: 'info' })
+
+            let rows = document.querySelectorAll("#s3-query-result-table tr");
+
+            let csv = [];
+
+            for (let i = 0; i < rows.length; i++) {
+                let row = [], cols = rows[i].querySelectorAll("td, th");
+
+                for (let j = 0; j < cols.length; j++)
+                    row.push(cols[j].innerText);
+
+                csv.push(row.join(","));
+            }
+
+            // Download CSV file
+            let filename = 'test.csv';
+            let downloadLink = filename;
+
+            // CSV file
+            let csvFile = new Blob([csv.join('\n')], { type: "text/csv" });
+
+            // Download link
+            downloadLink = document.createElement("a");
+
+            // File name
+            downloadLink.download = filename;
+
+            // Create a link to the file
+            downloadLink.href = window.URL.createObjectURL(csvFile);
+
+            // Hide download link
+            downloadLink.style.display = "none";
+
+            // Add the link to DOM
+            document.body.appendChild(downloadLink);
+
+            // Click download link
+            downloadLink.click();
+        });
+    });
+
     jQuery(function () {
         jQuery('#s3-query-form').on('submit', function (e) {
             e.preventDefault();
