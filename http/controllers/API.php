@@ -399,7 +399,7 @@ class API extends Controller
             {
                 if (isset($event['Records']))
                 {
-                    $data_header = (string) $event['Records']['Payload'];
+                    $header_str = (string) $event['Records']['Payload'];
                 }
                 elseif (isset($event['Stats']))
                 {
@@ -416,15 +416,15 @@ class API extends Controller
 
             if ($base_expr_star)
             {
-                $valid_headings = explode(',', $data_header);
+                $valid_headings = explode(',', str_replace("\n", "", $header_str));
             }
             else
             {
-                foreach (explode(',', $data_header) as $heading)
+                foreach (explode(',', $header_str) as $heading)
                 {
                     if (str_contains($select_query, $heading))
                     {
-                        $valid_headings[] = $heading;
+                        $valid_headings[] = str_replace("\n", "", $heading);
                     }
                 }
             }
@@ -449,17 +449,50 @@ class API extends Controller
             ]);
 
             $response_json = [
+                'object_key' => $object_key,
                 'select_query_str' => $select_query,
                 'select_query_obj' => $parser->parse($select_query),
-                'data_header' => $data_header,
-                'headings' => $valid_headings
+                'header_str' => $header_str,
+                'data_header' => $valid_headings
             ];
 
             foreach ($result['Payload'] as $event)
             {
                 if (isset($event['Records']))
                 {
-                    $response_json['records'][] = (string) $event['Records']['Payload'];
+                    $payload = (string) $event['Records']['Payload'];
+
+                    // payload raw
+                    $response_json['records'][] = $payload;
+
+                    // payload as 2d array
+                    if (str_contains($payload, "\n"))
+                    {
+                        $payload = str_replace("\r", "", $payload);
+                        $records = explode("\n", $payload);
+                    }
+                    elseif (str_contains($payload, "\r"))
+                    {
+                        $records = explode("\r", $payload);
+                    }
+                    else
+                    {
+                        return Response::make('could not determine file delimiting', 500);
+                    }
+
+                    // get the second dimension of the data
+                    // guess that the dimensionality is the header length size
+                    $second_dim = count($valid_headings);
+
+                    foreach ($records as $record)
+                    {
+                        // if the dimensions match add this entry otherwise throw it out it causes problems
+                        $row_data = explode(',', $record);
+                        if(count($row_data) == $second_dim)
+                        {
+                            $response_json['data'][] = $row_data;
+                        }
+                    }
                 }
                 elseif (isset($event['Stats']))
                 {
