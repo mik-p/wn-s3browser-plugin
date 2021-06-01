@@ -371,137 +371,13 @@ class API extends Controller
             return Response::make('bad request - query is empty', 400);
         }
 
-        $parser = new PHPSQLParser();
-        $parsed_query = $parser->parse($select_query);
-
         try
         {
-            // retain header
-            $result = $this->storage_client->selectObjectContent([
-                'Bucket' => $bucket,
-                'Key' => $object_key,
+            $response_json = $this->call_select($bucket, $object_key, $select_query);
 
-                'ExpressionType' => 'SQL',
-                'Expression' => 'select * from s3object limit 1',
-
-                'InputSerialization' => [
-                    'CSV' => [
-                        'FileHeaderInfo' => 'NONE',
-                        'RecordDelimiter' => '\n',
-                        'FieldDelimiter' => ',',
-                    ]
-                ],
-
-                'OutputSerialization' => ['CSV' => []]
-            ]);
-
-            foreach ($result['Payload'] as $event)
+            if ($response_json['error_code'] == 500)
             {
-                if (isset($event['Records']))
-                {
-                    $header_str = (string) $event['Records']['Payload'];
-                }
-                elseif (isset($event['Stats']))
-                {
-                }
-                elseif (isset($event['End']))
-                {
-                }
-            }
-
-            // filter the headings that aren't needed
-            $valid_headings = [];
-
-            $base_expr_star = str_contains($parsed_query["SELECT"][0]["base_expr"], "*");
-
-            if ($base_expr_star)
-            {
-                $valid_headings = explode(',', str_replace("\n", "", $header_str));
-            }
-            else
-            {
-                foreach (explode(',', $header_str) as $heading)
-                {
-                    if (str_contains($select_query, $heading))
-                    {
-                        $valid_headings[] = str_replace("\n", "", $heading);
-                    }
-                }
-            }
-
-            // perform the actual query
-            $result = $this->storage_client->selectObjectContent([
-                'Bucket' => $bucket,
-                'Key' => $object_key,
-
-                'ExpressionType' => 'SQL',
-                'Expression' => $select_query,
-
-                'InputSerialization' => [
-                    'CSV' => [
-                        'FileHeaderInfo' => 'USE',
-                        'RecordDelimiter' => '\n',
-                        'FieldDelimiter' => ',',
-                    ]
-                ],
-
-                'OutputSerialization' => ['CSV' => []]
-            ]);
-
-            $response_json = [
-                'object_key' => $object_key,
-                'select_query_str' => $select_query,
-                'select_query_obj' => $parser->parse($select_query),
-                'header_str' => $header_str,
-                'data_header' => $valid_headings
-            ];
-
-            foreach ($result['Payload'] as $event)
-            {
-                if (isset($event['Records']))
-                {
-                    $payload = (string) $event['Records']['Payload'];
-
-                    // payload raw
-                    $response_json['records'][] = $payload;
-
-                    // payload as 2d array
-                    if (str_contains($payload, "\n"))
-                    {
-                        $payload = str_replace("\r", "", $payload);
-                        $records = explode("\n", $payload);
-                    }
-                    elseif (str_contains($payload, "\r"))
-                    {
-                        $records = explode("\r", $payload);
-                    }
-                    else
-                    {
-                        return Response::make('could not determine file delimiting', 500);
-                    }
-
-                    // get the second dimension of the data
-                    // guess that the dimensionality is the header length size
-                    $second_dim = count($valid_headings);
-
-                    foreach ($records as $record)
-                    {
-                        // if the dimensions match add this entry otherwise throw it out it causes problems
-                        $row_data = explode(',', $record);
-                        if(count($row_data) == $second_dim)
-                        {
-                            $response_json['data'][] = $row_data;
-                        }
-                    }
-                }
-                elseif (isset($event['Stats']))
-                {
-                    $response_json['stats'] = 'Processed '.$event['Stats']['Details']['BytesProcessed'].' bytes';
-                }
-                elseif (isset($event['End']))
-                {
-                    $response_json['end'] = 'Complete';
-                }
+                return Response::make('could not determine file delimiting', 500);
             }
 
             return Response::json($response_json);
@@ -563,5 +439,145 @@ class API extends Controller
         }
 
         return $object_keys;
+    }
+
+    public function call_select($bucket, $object_key, $select_query)
+    {
+        $parser = new PHPSQLParser();
+        $parsed_query = $parser->parse($select_query);
+
+        // retain header
+        $result = $this->storage_client->selectObjectContent([
+            'Bucket' => $bucket,
+            'Key' => $object_key,
+
+            'ExpressionType' => 'SQL',
+            'Expression' => 'select * from s3object limit 1',
+
+            'InputSerialization' => [
+                'CSV' => [
+                    'FileHeaderInfo' => 'NONE',
+                    'RecordDelimiter' => '\n',
+                    'FieldDelimiter' => ',',
+                ]
+            ],
+
+            'OutputSerialization' => ['CSV' => []]
+        ]);
+
+        foreach ($result['Payload'] as $event)
+        {
+            if (isset($event['Records']))
+            {
+                $header_str = (string) $event['Records']['Payload'];
+            }
+            elseif (isset($event['Stats']))
+            {
+            }
+            elseif (isset($event['End']))
+            {
+            }
+        }
+
+        // filter the headings that aren't needed
+        $valid_headings = [];
+
+        $base_expr_star = str_contains($parsed_query["SELECT"][0]["base_expr"], "*");
+
+        if ($base_expr_star)
+        {
+            $valid_headings = explode(',', str_replace("\n", "", $header_str));
+        }
+        else
+        {
+            foreach (explode(',', $header_str) as $heading)
+            {
+                if (str_contains($select_query, $heading))
+                {
+                    $valid_headings[] = str_replace("\n", "", $heading);
+                }
+            }
+        }
+
+        // perform the actual query
+        $result = $this->storage_client->selectObjectContent([
+            'Bucket' => $bucket,
+            'Key' => $object_key,
+
+            'ExpressionType' => 'SQL',
+            'Expression' => $select_query,
+
+            'InputSerialization' => [
+                'CSV' => [
+                    'FileHeaderInfo' => 'USE',
+                    'RecordDelimiter' => '\n',
+                    'FieldDelimiter' => ',',
+                ]
+            ],
+
+            'OutputSerialization' => ['CSV' => []]
+        ]);
+
+        $response_json = [
+            'object_key' => $object_key,
+            'select_query_str' => $select_query,
+            'select_query_obj' => $parser->parse($select_query),
+            'header_str' => $header_str,
+            'data_header' => $valid_headings
+        ];
+
+        foreach ($result['Payload'] as $event)
+        {
+            if (isset($event['Records']))
+            {
+                $payload = (string) $event['Records']['Payload'];
+
+                // payload raw
+                $response_json['records'][] = $payload;
+
+                // payload as 2d array
+                if (str_contains($payload, "\n"))
+                {
+                    $payload = str_replace("\r", "", $payload);
+                    $records = explode("\n", $payload);
+                }
+                elseif (str_contains($payload, "\r"))
+                {
+                    $records = explode("\r", $payload);
+                }
+                else
+                {
+                    // return Response::make('could not determine file delimiting', 500);
+                    $response_json['end'] = 'Failed';
+                    $response_json['error_code'] = 500;
+                    $response_json['error_message'] = 'could not determine file delimiting';
+                    return $response_json;
+                }
+
+                // get the second dimension of the data
+                // guess that the dimensionality is the header length size
+                $second_dim = count($valid_headings);
+
+                foreach ($records as $record)
+                {
+                    // if the dimensions match add this entry otherwise throw it out it causes problems
+                    $row_data = explode(',', $record);
+                    if(count($row_data) == $second_dim)
+                    {
+                        $response_json['data'][] = $row_data;
+                    }
+                }
+            }
+            elseif (isset($event['Stats']))
+            {
+                $response_json['stats'] = 'Processed '.$event['Stats']['Details']['BytesProcessed'].' bytes';
+            }
+            elseif (isset($event['End']))
+            {
+                $response_json['end'] = 'Complete';
+            }
+        }
+
+        return $response_json;
     }
 }
