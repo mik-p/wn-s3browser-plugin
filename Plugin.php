@@ -11,9 +11,9 @@ class Plugin extends PluginBase
     public function registerComponents()
     {
         return [
-            'mikp\s3browser\Components\s3browser' => 's3browser',
-            'mikp\s3browser\Components\s3uploader' => 's3uploader',
-            'mikp\s3browser\Components\s3query' => 's3query'
+            'mikp\s3browser\Components\S3Browser' => 's3browser',
+            'mikp\s3browser\Components\S3Uploader' => 's3uploader',
+            'mikp\s3browser\Components\S3Query' => 's3query'
         ];
     }
 
