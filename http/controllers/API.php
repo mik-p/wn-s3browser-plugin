@@ -128,9 +128,12 @@ class API extends Controller
 
         $file_extension = end($file_name_in_key_split);
 
+        $warnings = [];
+
         if ($req->filename->extension() != $file_extension)
         {
-            return Response::make('bad request - file extension does not match named extension: "'.$req->filename->extension().'", "'.$file_extension.'"', 400);
+            $warnings[] = 'file extension did not match named extension: "'.$req->filename->extension().'", "'.$file_extension.'"';
+            // return Response::make('bad request - file extension does not match named extension: "'.$req->filename->extension().'", "'.$file_extension.'"', 400);
         }
 
         // upload the file to s3
@@ -146,7 +149,8 @@ class API extends Controller
             return Response::json([
                 'statusCode' => $result['@metadata']['statusCode'],
                 'object_key' => $object_key,
-                'content_type' => $req->filename->getMimeType()
+                'content_type' => $req->filename->getMimeType(),
+                'warnings' => $warnings
             ]);
         }
         catch (S3Exception $e)
