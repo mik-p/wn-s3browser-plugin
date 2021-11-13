@@ -82,11 +82,8 @@ class API extends Controller
 
         try
         {
-            // send object back
-            $object = $this->storage_client->getObject([
-                'Bucket' => $bucket,
-                'Key' => $object_key
-            ]);
+            // get object
+            $object = $this->getObject($bucket, $object_key);
 
             // send file to browser as a download
             return Response::make($object['Body'])->header('Content-Type', $object['ContentType']);
@@ -443,6 +440,18 @@ class API extends Controller
         }
 
         return $object_keys;
+    }
+
+    public function getObject($bucket, $object_key)
+    {
+        // get object
+        $object = $this->storage_client->getObject([
+            'Bucket' => $bucket,
+            'Key' => $object_key
+        ]);
+
+        // send object back
+        return $object;
     }
 
     public function call_select($bucket, $object_key, $select_query)
