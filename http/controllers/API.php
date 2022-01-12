@@ -1,4 +1,6 @@
-<?php namespace mikp\s3browser\Http\Controllers;
+<?php
+
+namespace mikp\s3browser\Http\Controllers;
 
 use Illuminate\Routing\Controller;
 
@@ -41,17 +43,17 @@ class API extends Controller
         $content = '<h1>S3 Browser API</h1>';
 
         $base_path = $req->path();
-        $content .= '<p>Base path: '.$base_path.'/'.'</p>';
+        $content .= '<p>Base path: ' . $base_path . '/' . '</p>';
 
         $content .= '<p>Endpoints:</p>';
 
         $content .= '<ul>';
-        $content .= '<li>'.$base_path.'/list/{bucket}'.'</li>';
-        $content .= '<li>'.$base_path.'/object'.'</li>';
-        $content .= '<li>'.$base_path.'/download'.'</li>';
-        $content .= '<li>'.$base_path.'/upload'.'</li>';
-        $content .= '<li>'.$base_path.'/zip'.'</li>';
-        $content .= '<li>'.$base_path.'/select'.'</li>';
+        $content .= '<li>' . $base_path . '/list/{bucket}' . '</li>';
+        $content .= '<li>' . $base_path . '/object' . '</li>';
+        $content .= '<li>' . $base_path . '/download' . '</li>';
+        $content .= '<li>' . $base_path . '/upload' . '</li>';
+        $content .= '<li>' . $base_path . '/zip' . '</li>';
+        $content .= '<li>' . $base_path . '/select' . '</li>';
         $content .= '</ul>';
 
         return Response::make(
@@ -75,21 +77,17 @@ class API extends Controller
         $object_key = $req->query('object_key');
         $bucket = $req->query('bucket');
 
-        if (!isset($bucket) || !isset($object_key))
-        {
+        if (!isset($bucket) || !isset($object_key)) {
             return Response::make('bad request missing url parameters', 400);
         }
 
-        try
-        {
+        try {
             // get object
             $object = $this->getObject($bucket, $object_key);
 
             // send file to browser as a download
             return Response::make($object['Body'])->header('Content-Type', $object['ContentType']);
-        }
-        catch (S3Exception $e)
-        {
+        } catch (S3Exception $e) {
             return Response::make($e->getMessage(), 500);
         }
 
@@ -103,14 +101,12 @@ class API extends Controller
         $object_key = $req->input('object_key');
         $bucket = $req->input('bucket');
 
-        if (!isset($bucket) || !isset($object_key))
-        {
+        if (!isset($bucket) || !isset($object_key)) {
             return Response::make('bad request missing url parameters', 400);
         }
 
         // file missing from request
-        if (!$req->hasFile('filename'))
-        {
+        if (!$req->hasFile('filename')) {
             return Response::make('bad request - missing file for upload', 400);
         }
 
@@ -118,24 +114,21 @@ class API extends Controller
         $file_name_in_key = explode('/', $object_key);
         $file_name_in_key = end($file_name_in_key);
         $file_name_in_key_split = explode('.', $file_name_in_key);
-        if (count($file_name_in_key_split) < 2)
-        {
-            return Response::make('bad request - improper file name or extension given: "'.$file_name_in_key.'"', 400);
+        if (count($file_name_in_key_split) < 2) {
+            return Response::make('bad request - improper file name or extension given: "' . $file_name_in_key . '"', 400);
         }
 
         $file_extension = end($file_name_in_key_split);
 
         $warnings = [];
 
-        if ($req->filename->extension() != $file_extension)
-        {
-            $warnings[] = 'file extension did not match named extension: "'.$req->filename->extension().'", "'.$file_extension.'"';
+        if ($req->filename->extension() != $file_extension) {
+            $warnings[] = 'file extension did not match named extension: "' . $req->filename->extension() . '", "' . $file_extension . '"';
             // return Response::make('bad request - file extension does not match named extension: "'.$req->filename->extension().'", "'.$file_extension.'"', 400);
         }
 
         // upload the file to s3
-        try
-        {
+        try {
             $result = $this->storage_client->putObject([
                 'Bucket' => $bucket,
                 'Key'    => $object_key,
@@ -149,9 +142,7 @@ class API extends Controller
                 'content_type' => $req->filename->getMimeType(),
                 'warnings' => $warnings
             ]);
-        }
-        catch (S3Exception $e)
-        {
+        } catch (S3Exception $e) {
             return Response::make($e->getMessage(), 500);
         }
 
@@ -165,13 +156,11 @@ class API extends Controller
         $object_key = $req->query('object_key');
         $bucket = $req->query('bucket');
 
-        if (!isset($bucket) || !isset($object_key))
-        {
+        if (!isset($bucket) || !isset($object_key)) {
             return Response::make('bad request missing url parameters', 400);
         }
 
-        try
-        {
+        try {
             // send object back
             $object = $this->storage_client->getObject([
                 'Bucket' => $bucket,
@@ -182,21 +171,20 @@ class API extends Controller
             $exploded_key = explode('/', $object_key);
             $file_name = end($exploded_key);
             array_pop($exploded_key);
-            foreach ($exploded_key as $name_part)
-            {
-                $file_name = $name_part.'-'.$file_name;
+            foreach ($exploded_key as $name_part) {
+                $file_name = $name_part . '-' . $file_name;
             }
 
             // send file to browser as a download
             $headers = ['Content-Type' => $object['ContentType']];
             return Response()->streamDownload(
-                function () use ($object) { echo $object['Body']; },
+                function () use ($object) {
+                    echo $object['Body'];
+                },
                 basename($file_name),
                 $headers
             );
-        }
-        catch (S3Exception $e)
-        {
+        } catch (S3Exception $e) {
             return Response::make($e->getMessage(), 500);
         }
 
@@ -210,48 +198,40 @@ class API extends Controller
         $prefix = $req->input('prefix');
         $bucket = $req->input('bucket');
 
-        if (!isset($bucket))
-        {
+        if (!isset($bucket)) {
             return Response::make('bad request - missing url parameters', 400);
         }
 
         // file missing from request
-        if (!$req->hasFile('filename'))
-        {
+        if (!$req->hasFile('filename')) {
             return Response::make('bad request - missing files for upload', 400);
         }
 
-        if (!isset($prefix))
-        {
+        if (!isset($prefix)) {
             $prefix = '';
         }
 
         // upload the file to s3
         $successful_uploads = [];
 
-        foreach ($req->filename as $file_name)
-        {
-            try
-            {
+        foreach ($req->filename as $file_name) {
+            try {
                 $result = $this->storage_client->putObject([
                     'Bucket' => $bucket,
-                    'Key'    => $prefix.'/'.$file_name->getClientOriginalName(),
+                    'Key'    => $prefix . '/' . $file_name->getClientOriginalName(),
                     'SourceFile' => $file_name->path(),
                     'ContentType' => $file_name->getMimeType()
                 ]);
 
-                if ($result['@metadata']['statusCode'] != 200)
-                {
-                    return Response::make('upload of file "'.$file_name->getClientOriginalName().'" failed', 500);
+                if ($result['@metadata']['statusCode'] != 200) {
+                    return Response::make('upload of file "' . $file_name->getClientOriginalName() . '" failed', 500);
                 }
 
                 $successful_uploads[] = [
                     'file' => $file_name->getClientOriginalName(),
                     'status' => $result['@metadata']['statusCode']
                 ];
-            }
-            catch (S3Exception $e)
-            {
+            } catch (S3Exception $e) {
                 return Response::make($e->getMessage(), 500);
             }
         }
@@ -266,8 +246,7 @@ class API extends Controller
         $prefix = $req->query('prefix');
         $bucket = $req->query('bucket');
 
-        if (!isset($bucket) || !isset($prefix))
-        {
+        if (!isset($bucket) || !isset($prefix)) {
             return Response::make('bad request missing url parameters', 400);
         }
 
@@ -277,10 +256,8 @@ class API extends Controller
             'Prefix' => ltrim($prefix, $prefix[0])
         ]);
 
-        if (isset($objectsListResponse['Contents']))
-        {
-            if(count($objectsListResponse['Contents']) == 0)
-            {
+        if (isset($objectsListResponse['Contents'])) {
+            if (count($objectsListResponse['Contents']) == 0) {
                 // empty folder
                 return Response::make('folder is empty', 200);
             }
@@ -291,31 +268,27 @@ class API extends Controller
             Storage::delete(Storage::allFiles($temp_dir)); // clear the old request
 
             // create a zip file name
-            $zip_file_name_end = date("Ymd-His").'.zip';
+            $zip_file_name_end = date("Ymd-His") . '.zip';
             $zip_file_name_start = '';
 
-            foreach (explode('/', ltrim($prefix, $prefix[0])) as $crumb)
-            {
-                $zip_file_name_start .= $crumb.'-';
+            foreach (explode('/', ltrim($prefix, $prefix[0])) as $crumb) {
+                $zip_file_name_start .= $crumb . '-';
             }
 
-            $zip_file_name = $zip_file_name_start.$zip_file_name_end;
+            $zip_file_name = $zip_file_name_start . $zip_file_name_end;
 
             // compress the files into a download-able zip
             $zip = new ZipArchive;
 
-            if ($zip->open(Storage::path($temp_dir).'/'.$zip_file_name, ZipArchive::CREATE) === TRUE)
-            {
+            if ($zip->open(Storage::path($temp_dir) . '/' . $zip_file_name, ZipArchive::CREATE) === TRUE) {
                 // download all the objects
-                foreach($objectsListResponse['Contents'] as $object)
-                {
+                foreach ($objectsListResponse['Contents'] as $object) {
                     // make a file name
                     $exploded_key = explode('/', $object['Key']);
                     $file_name = end($exploded_key);
                     array_pop($exploded_key);
-                    foreach ($exploded_key as $name_part)
-                    {
-                        $file_name = $name_part.'-'.$file_name;
+                    foreach ($exploded_key as $name_part) {
+                        $file_name = $name_part . '-' . $file_name;
                     }
 
                     // get the object
@@ -324,10 +297,10 @@ class API extends Controller
                         'Key' => $object['Key']
                     ]);
 
-                    Storage::put($temp_dir.'/'.$file_name, $object['Body']);
+                    Storage::put($temp_dir . '/' . $file_name, $object['Body']);
 
                     // Add File in ZipArchive
-                    $zip->addFile(Storage::path($temp_dir).'/'.$file_name, $file_name);
+                    $zip->addFile(Storage::path($temp_dir) . '/' . $file_name, $file_name);
                 }
 
                 // close after done
@@ -335,10 +308,9 @@ class API extends Controller
             }
 
             // Create Download Response
-            $zip_file_path = $temp_dir.'/'.$zip_file_name;
+            $zip_file_path = $temp_dir . '/' . $zip_file_name;
 
-            if(Storage::exists($zip_file_path))
-            {
+            if (Storage::exists($zip_file_path)) {
                 return Response::streamDownload(
                     function () use ($zip_file_path) {
                         $zip_contents = Storage::get($zip_file_path);
@@ -362,29 +334,23 @@ class API extends Controller
         $object_key = $req->query('object_key');
         $select_query = $req->query('query');
 
-        if (!isset($bucket) || !isset($object_key) || !isset($select_query))
-        {
+        if (!isset($bucket) || !isset($object_key) || !isset($select_query)) {
             return Response::make('bad request - missing url parameters', 400);
         }
 
-        if (empty($select_query))
-        {
+        if (empty($select_query)) {
             return Response::make('bad request - query is empty', 400);
         }
 
-        try
-        {
+        try {
             $response_json = $this->call_select($bucket, $object_key, $select_query);
 
-            if ($response_json['error_code'] == 500)
-            {
+            if ($response_json['error_code'] == 500) {
                 return Response::make('could not determine file delimiting', 500);
             }
 
             return Response::json($response_json);
-        }
-        catch (S3Exception $e)
-        {
+        } catch (S3Exception $e) {
             return Response::make($e->getMessage(), 500);
         }
 
@@ -392,7 +358,7 @@ class API extends Controller
     }
 
     // helpers
-    public function createS3Client ()
+    public function createS3Client()
     {
         // get settings
         $this->activated = Settings::get('s3activated', false);
@@ -401,8 +367,7 @@ class API extends Controller
         $this->access = Settings::get('s3accesskey', 'no-access');
         $this->secret = Settings::get('s3secretkey', 'no-secret');
 
-        if ($this->activated)
-        {
+        if ($this->activated) {
             // connect to s3 with given credentials
             $this->storage_client = new S3Client([
                 'version' => 'latest',
@@ -410,9 +375,9 @@ class API extends Controller
                 'endpoint' => $this->url,
                 'use_path_style_endpoint' => true,
                 'credentials' => [
-                        'key'    => $this->access,
-                        'secret' => $this->secret,
-                    ],
+                    'key'    => $this->access,
+                    'secret' => $this->secret,
+                ],
             ]);
         }
     }
@@ -431,10 +396,8 @@ class API extends Controller
 
         $object_keys = [];
 
-        if (isset($objectsListResponse['Contents']))
-        {
-            foreach ($objectsListResponse['Contents'] as $object)
-            {
+        if (isset($objectsListResponse['Contents'])) {
+            foreach ($objectsListResponse['Contents'] as $object) {
                 $object_keys[] = $object['Key'];
             }
         }
@@ -478,17 +441,11 @@ class API extends Controller
             'OutputSerialization' => ['CSV' => []]
         ]);
 
-        foreach ($result['Payload'] as $event)
-        {
-            if (isset($event['Records']))
-            {
+        foreach ($result['Payload'] as $event) {
+            if (isset($event['Records'])) {
                 $header_str = (string) $event['Records']['Payload'];
-            }
-            elseif (isset($event['Stats']))
-            {
-            }
-            elseif (isset($event['End']))
-            {
+            } elseif (isset($event['Stats'])) {
+            } elseif (isset($event['End'])) {
             }
         }
 
@@ -497,16 +454,11 @@ class API extends Controller
 
         $base_expr_star = str_contains($parsed_query["SELECT"][0]["base_expr"], "*");
 
-        if ($base_expr_star)
-        {
+        if ($base_expr_star) {
             $valid_headings = explode(',', str_replace("\n", "", $header_str));
-        }
-        else
-        {
-            foreach (explode(',', $header_str) as $heading)
-            {
-                if (str_contains($select_query, $heading))
-                {
+        } else {
+            foreach (explode(',', $header_str) as $heading) {
+                if (str_contains($select_query, $heading)) {
                     $valid_headings[] = str_replace("\n", "", $heading);
                 }
             }
@@ -539,27 +491,20 @@ class API extends Controller
             'data_header' => $valid_headings
         ];
 
-        foreach ($result['Payload'] as $event)
-        {
-            if (isset($event['Records']))
-            {
+        foreach ($result['Payload'] as $event) {
+            if (isset($event['Records'])) {
                 $payload = (string) $event['Records']['Payload'];
 
                 // payload raw
                 $response_json['records'][] = $payload;
 
                 // payload as 2d array
-                if (str_contains($payload, "\n"))
-                {
+                if (str_contains($payload, "\n")) {
                     $payload = str_replace("\r", "", $payload);
                     $records = explode("\n", $payload);
-                }
-                elseif (str_contains($payload, "\r"))
-                {
+                } elseif (str_contains($payload, "\r")) {
                     $records = explode("\r", $payload);
-                }
-                else
-                {
+                } else {
                     // return Response::make('could not determine file delimiting', 500);
                     $response_json['end'] = 'Failed';
                     $response_json['error_code'] = 500;
@@ -571,22 +516,16 @@ class API extends Controller
                 // guess that the dimensionality is the header length size
                 $second_dim = count($valid_headings);
 
-                foreach ($records as $record)
-                {
+                foreach ($records as $record) {
                     // if the dimensions match add this entry otherwise throw it out it causes problems
                     $row_data = explode(',', $record);
-                    if(count($row_data) == $second_dim)
-                    {
+                    if (count($row_data) == $second_dim) {
                         $response_json['data'][] = $row_data;
                     }
                 }
-            }
-            elseif (isset($event['Stats']))
-            {
-                $response_json['stats'] = 'Processed '.$event['Stats']['Details']['BytesProcessed'].' bytes';
-            }
-            elseif (isset($event['End']))
-            {
+            } elseif (isset($event['Stats'])) {
+                $response_json['stats'] = 'Processed ' . $event['Stats']['Details']['BytesProcessed'] . ' bytes';
+            } elseif (isset($event['End'])) {
                 $response_json['end'] = 'Complete';
             }
         }
