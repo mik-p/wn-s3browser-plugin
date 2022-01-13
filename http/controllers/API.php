@@ -11,8 +11,6 @@ use Aws\S3\S3Client;
 
 use PHPSQLParser\PHPSQLParser;
 
-use Auth;
-use App;
 use Response;
 use Illuminate\Http\Request;
 use Storage;
