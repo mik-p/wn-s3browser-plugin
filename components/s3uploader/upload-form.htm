@@ -67,9 +67,9 @@
 
                     if (data[0].status == '200') {
                         // jQuery('#s3-upload-form')[0].reset();
-                        jQuery('#s3-uploadStatus').html('<small style="color:#28A74B;">Files has uploaded successfully!</small>');
+                        jQuery('#s3-uploadStatus').html('<small class="muted" style="color:#28A74B;">Files has uploaded successfully!</small>');
                     } else {
-                        jQuery('#s3-uploadStatus').html('<small style="color:#EA4335;">Something went wrong</small>');
+                        jQuery('#s3-uploadStatus').html('<small class="muted" style="color:#EA4335;">Something went wrong</small>');
                     }
 
                     let message = "Successfully Uploaded:\n";

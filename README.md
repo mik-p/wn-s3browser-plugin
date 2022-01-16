@@ -15,9 +15,9 @@ This plugin allows an additional location and method of storing files. It can su
 
 For example:
 
-Say that your website hosts a bunch of CAD files that your users can download, but you only want some users to be able to access them.
+Say that your website hosts a bunch of CAD files that your users can download, but you only want some users to be able to access them. The problem further complicating the issue is that all your CAD files are on your business's NAS - which is not public and the sys-admin didn't bother to set up SSL, add valid certificates, or create root-CAs and maybe there isn't any DNS records either.
 
-By adding a middleware to the s3browser routes only allowed files will display on the downloads page.
+By adding a middleware to the s3browser routes only allowed files will display on the downloads page and the insecure s3 storage server is not publicly exposed.
 
 ## Issues
 
