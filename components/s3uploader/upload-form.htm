@@ -78,7 +78,7 @@
                         message += "   - " + element.file + "\n";
                     });
 
-                    jQuery.wn.flashMsg({ text: message, class: 'success' })
+                    jQuery.wn.flashMsg({ text: message, class: 'success', interval: 4 })
                     // alert(message);
                 },
                 error: function (data) {
@@ -86,7 +86,7 @@
 
                     jQuery('#s3-uploadStatus').html('<small style="color:#EA4335;">File upload failed, please try again.</small>');
 
-                    jQuery.wn.flashMsg({ text: 'File upload failed, please try again.', class: 'error' })
+                    jQuery.wn.flashMsg({ text: 'File upload failed, please try again.', class: 'error', interval: 4 })
                     // alert(data.responseText);
                 }
             });
