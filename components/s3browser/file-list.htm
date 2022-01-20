@@ -46,11 +46,18 @@
     {% for object in __SELF__.getObjects() %}
     <tr>
         <td class="text-center" style="padding-left: 0px; padding-right: 0px;">
-            <a id="s3browser-download-btn" class="btn btn-sm shadow-0"
-                href="{{ __SELF__.api_basepath }}/download?bucket={{ __SELF__.property('bucket') }}&object_key={{ object.Key }}"
-                target="_blank" rel="noopener noreferrer" data-mdb-toggle='tooltip' title="Download file">
-                <i class="fas fa-cloud-download-alt"></i>
-            </a>
+            <div class="btn-group btn-group-sm shadow-0">
+                <a id="s3browser-download-btn" class="btn btn-sm shadow-0"
+                    href="{{ __SELF__.api_basepath }}/download?bucket={{ __SELF__.property('bucket') }}&object_key={{ object.Key }}"
+                    target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-cloud-download-alt" title="Download file"></i>
+                </a>
+                <a id="s3browser-delete-btn" class="btn btn-sm shadow-0"
+                    href="{{ __SELF__.api_basepath }}/delete?bucket={{ __SELF__.property('bucket') }}&object_key={{ object.Key }}"
+                    target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-trash" title="Delete file"></i>
+                </a>
+            </div>
         </td>
         <td>
             <a href="{{ __SELF__.property('baseuri') }}{{ last_crumb }}{{ prefix }}"

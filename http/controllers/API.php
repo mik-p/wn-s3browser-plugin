@@ -48,6 +48,7 @@ class API extends Controller
         $content .= '<ul>';
         $content .= '<li>' . $base_path . '/list/{bucket}' . '</li>';
         $content .= '<li>' . $base_path . '/object' . '</li>';
+        $content .= '<li>' . $base_path . '/delete' . '</li>';
         $content .= '<li>' . $base_path . '/download' . '</li>';
         $content .= '<li>' . $base_path . '/upload' . '</li>';
         $content .= '<li>' . $base_path . '/zip' . '</li>';
@@ -145,6 +146,31 @@ class API extends Controller
         }
 
         return Response::make('something went wrong', 500);
+    }
+
+    // get an object as a http response body
+    public function delete_object(Request $req)
+    {
+        // read request url encoded parameters
+        $object_key = $req->query('object_key');
+        $bucket = $req->query('bucket');
+
+        if (!isset($bucket) || !isset($object_key)) {
+            return Response::make('bad request missing url parameters', 400);
+        }
+
+        try {
+            $result = $this->storage_client->deleteObject([
+                'Bucket' => $bucket,
+                'Key' => $object_key,
+            ]);
+
+            return response()->json($result, 200);
+        } catch (S3Exception $e) {
+            return Response::make($e->getMessage(), 500);
+        }
+
+        return Response::make('not found', 404);
     }
 
     // download an object as a file

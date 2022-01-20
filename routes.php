@@ -21,6 +21,10 @@ Route::group([
     // api post object as s3 object
     Route::post('/object', 'mikp\s3browser\Http\Controllers\API@post_object');
 
+    // delete object
+    Route::get('/delete', 'mikp\s3browser\Http\Controllers\API@delete_object');
+    Route::delete('/delete', 'mikp\s3browser\Http\Controllers\API@delete_object');
+
     // download object as file
     Route::get('/download', 'mikp\s3browser\Http\Controllers\API@download');
 

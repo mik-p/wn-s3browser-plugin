@@ -3,10 +3,11 @@
     <div class="form-outline mb-3">
         <i class="far fa-folder-open trailing"></i>
         <input id="s3-upload-file-prefix" class="form-control" type="text" name="prefix" placeholder="Path Prefix"
-            autocomplete="off" />
+            autocomplete="off" required />
         <label class="form-label" for="s3-upload-file-prefix">Path Prefix</label>
     </div>
-    <input id="s3-upload-file-input" class="form-control mb-3" type="file" multiple="multiple" name="filename[]" />
+    <input id="s3-upload-file-input" class="form-control mb-3" type="file" multiple="multiple" name="filename[]"
+        required />
     <!-- submit -->
     <button class="btn btn-sm shadow-0" type="submit" value="SUBMIT" form="s3-upload-form">
         <i class="fas fa-cloud-upload-alt"></i>
