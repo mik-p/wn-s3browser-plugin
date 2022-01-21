@@ -48,6 +48,7 @@ class API extends Controller
         $content .= '<ul>';
         $content .= '<li>' . $base_path . '/list/{bucket}' . '</li>';
         $content .= '<li>' . $base_path . '/object' . '</li>';
+        $content .= '<li>' . $base_path . '/object/url' . '</li>';
         $content .= '<li>' . $base_path . '/delete' . '</li>';
         $content .= '<li>' . $base_path . '/download' . '</li>';
         $content .= '<li>' . $base_path . '/upload' . '</li>';
@@ -146,6 +147,39 @@ class API extends Controller
         }
 
         return Response::make('something went wrong', 500);
+    }
+
+    // get a presigned url for the given object
+    public function presigned_url(Request $req)
+    {
+        // read request url encoded parameters
+        $object_key = $req->query('object_key');
+        $bucket = $req->query('bucket');
+        $duration_str = $req->query('duration_str', '+20 minutes');
+
+        if (!isset($bucket) || !isset($object_key)) {
+            return Response::make('bad request missing url parameters', 400);
+        }
+
+        try {
+            // create the presigned URL
+            $cmd = $this->storage_client->getCommand('GetObject', [
+                'Bucket' => $bucket,
+                'Key' => $object_key
+            ]);
+
+            $request = $this->storage_client->createPresignedRequest($cmd, $duration_str);
+
+            // Get the actual presigned-url
+            $presignedUrl = (string)$request->getUri();
+
+            // send presigned url back
+            return Response::make($presignedUrl);
+        } catch (S3Exception $e) {
+            return Response::make($e->getMessage(), 500);
+        }
+
+        return Response::make('not found', 404);
     }
 
     // get an object as a http response body

@@ -21,6 +21,9 @@ Route::group([
     // api post object as s3 object
     Route::post('/object', 'mikp\s3browser\Http\Controllers\API@post_object');
 
+    // get a pre-signed url for an object
+    Route::get('/object/url', 'mikp\s3browser\Http\Controllers\API@presigned_url');
+
     // delete object
     Route::get('/delete', 'mikp\s3browser\Http\Controllers\API@delete_object');
     Route::delete('/delete', 'mikp\s3browser\Http\Controllers\API@delete_object');

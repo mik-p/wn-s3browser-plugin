@@ -43,6 +43,19 @@
                     </button>
                 </td>
             </tr>
+            <tr>
+                <th>Pre-signed URL</th>
+                <td>
+                    <a id="presigned-url" href="#" target="_blank" rel="noopener noreferrer">
+                        ...
+                    </a>
+                </td>
+                <td>
+                    <button class="btn btn-sm shadow-0" onClick="createPresignedURL()">
+                        <i>create</i>
+                    </button>
+                </td>
+            </tr>
         </table>
     </div>
     {% endif %}
@@ -88,6 +101,34 @@
         apiURL.parentNode.removeChild(apiURL);
 
         jQuery.wn.flashMsg({ text: "Copied API URL!", class: 'success' })
+    }
+
+    // create a presigned url for the object
+    function createPresignedURL() {
+        // object details
+        const object_key = encodeURIComponent(document.getElementById("copy-file-key").getAttribute("value"));
+        const get_url = "{{ __SELF__.api_basepath }}/object/url?bucket={{ __SELF__.property('bucket') }}&object_key=" + object_key;
+
+        // create url request
+        jQuery.ajax({
+            url: get_url,
+            type: 'GET',
+            enctype: 'application/json',
+            contentType: false,
+            cache: false,
+            processData: false,
+            success: function (data) {
+                // fill file details with created link
+                jQuery('#presigned-url').prop('href', data);
+
+                // limit string size
+                if (data.length > 50) {
+                    data = data.slice(0, 50) + '...';
+                }
+
+                jQuery('#presigned-url').text(data);
+            }
+        });
     }
 </script>
 {% endput %}
