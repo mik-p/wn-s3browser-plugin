@@ -162,16 +162,19 @@ class API extends Controller
         }
 
         try {
+            // // create the presigned URL
+            // $cmd = $this->storage_client->getCommand('GetObject', [
+            //     'Bucket' => $bucket,
+            //     'Key' => $object_key
+            // ]);
+
+            // $request = $this->storage_client->createPresignedRequest($cmd, $duration_str);
+
+            // // Get the actual presigned-url
+            // $presignedUrl = (string)$request->getUri();
+
             // create the presigned URL
-            $cmd = $this->storage_client->getCommand('GetObject', [
-                'Bucket' => $bucket,
-                'Key' => $object_key
-            ]);
-
-            $request = $this->storage_client->createPresignedRequest($cmd, $duration_str);
-
-            // Get the actual presigned-url
-            $presignedUrl = (string)$request->getUri();
+            $presignedUrl = $this->createPresignedURL($bucket, $object_key, $duration_str);
 
             // send presigned url back
             return Response::make($presignedUrl);
@@ -473,6 +476,22 @@ class API extends Controller
 
         // send object back
         return $object;
+    }
+
+    public function createPresignedURL($bucket, $object_key, $duration_str)
+    {
+        // create the presigned URL
+        $cmd = $this->storage_client->getCommand('GetObject', [
+            'Bucket' => $bucket,
+            'Key' => $object_key
+        ]);
+
+        $request = $this->storage_client->createPresignedRequest($cmd, $duration_str);
+
+        // Get the actual presigned-url
+        $presignedUrl = (string)$request->getUri();
+
+        return $presignedUrl;
     }
 
     public function call_select($bucket, $object_key, $select_query)

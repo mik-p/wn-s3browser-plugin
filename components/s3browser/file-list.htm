@@ -25,7 +25,7 @@
     </tr>
     <!-- folders in the list -->
     {% for prefix in __SELF__.getPrefixes() %}
-    <tr>
+    <tr class="s3browser-folder-tr">
         <td class="text-center" style="padding-left: 0px; padding-right: 0px;">
             <a id="s3browser-download-btn" class="btn btn-sm shadow-0"
                 href="{{ __SELF__.api_basepath }}/zip?bucket={{ __SELF__.property('bucket') }}&prefix={{ last_crumb }}{{ prefix }}"
@@ -44,7 +44,7 @@
     {% endfor %}
     <!-- files in the list -->
     {% for object in __SELF__.getObjects() %}
-    <tr>
+    <tr class="s3browser-file-tr" value="{{ object.Key }}">
         <td class="text-center" style="padding-left: 0px; padding-right: 0px;">
             <div class="btn-group btn-group-sm shadow-0">
                 <a id="s3browser-download-btn" class="btn btn-sm shadow-0"
@@ -59,7 +59,7 @@
                 </a>
             </div>
         </td>
-        <td>
+        <td class="s3browser-file-name-td">
             <a href="{{ __SELF__.property('baseuri') }}{{ last_crumb }}{{ prefix }}"
                 data-request="{{ __SELF__ }}::onFileDetails"
                 data-request-update="'{{ __SELF__ }}::file-details': '#fileDetails'"
@@ -68,8 +68,8 @@
                 {{object.ShortName}}
             </a>
         </td>
-        <td>{{object.Size}} - Bytes</td>
-        <td>{{object.LastModified}}</td>
+        <td class="s3browser-file-size-td" value="{{ object.Size }}">{{ object.Size }} - Bytes</td>
+        <td class="s3browser-file-modified-td">{{ object.LastModified }}</td>
     </tr>
     {% endfor %}
 </table>
