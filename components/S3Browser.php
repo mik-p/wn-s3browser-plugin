@@ -1,4 +1,6 @@
-<?php namespace mikp\s3browser\Components;
+<?php
+
+namespace mikp\s3browser\Components;
 
 use Cms\Classes\ComponentBase;
 
@@ -37,29 +39,29 @@ class S3Browser extends ComponentBase
     {
         return [
             'baseuri' => [
-                 'title'             => 'base uri',
-                 'description'       => 'the browser component base uri',
-                 'type'              => 'string',
-                 'required'          => true,
-                 'default'           => '/',
-                 'validationPattern' => '',
-                 'validationMessage' => 'the base uri property can contain only a uri'
+                'title'             => 'base uri',
+                'description'       => 'the browser component base uri',
+                'type'              => 'string',
+                'required'          => true,
+                'default'           => '/',
+                'validationPattern' => '',
+                'validationMessage' => 'the base uri property can contain only a uri'
             ],
             'bucket' => [
-                 'title'             => 'bucket',
-                 'description'       => 'the s3 bucket',
-                 'type'              => 'string',
-                 'required'          => true,
-                 'validationPattern' => '',
-                 'validationMessage' => 'the bucket property can contain only a valid bucket name'
+                'title'             => 'bucket',
+                'description'       => 'the s3 bucket',
+                'type'              => 'string',
+                'required'          => true,
+                'validationPattern' => '',
+                'validationMessage' => 'the bucket property can contain only a valid bucket name'
             ],
             'prefix' => [
-                 'title'             => 'path prefix',
-                 'description'       => 'the optional S3 bucket path prefix',
-                 'default'           => '',
-                 'type'              => 'string',
-                 'validationPattern' => '',
-                 'validationMessage' => 'the prefix property can contain only a uri'
+                'title'             => 'path prefix',
+                'description'       => 'the optional S3 bucket path prefix',
+                'default'           => '',
+                'type'              => 'string',
+                'validationPattern' => '',
+                'validationMessage' => 'the prefix property can contain only a uri'
             ]
         ];
     }
@@ -74,7 +76,7 @@ class S3Browser extends ComponentBase
         $this->createS3Client();
     }
 
-    public function createS3Client ()
+    public function createS3Client()
     {
         // get settings
         $this->activated = Settings::get('s3activated', false);
@@ -83,8 +85,7 @@ class S3Browser extends ComponentBase
         $this->access = Settings::get('s3accesskey', 'no-access');
         $this->secret = Settings::get('s3secretkey', 'no-secret');
 
-        if ($this->activated)
-        {
+        if ($this->activated) {
             // connect to s3 with given credentials
             $this->storage_client = new S3Client([
                 'version' => 'latest',
@@ -92,9 +93,9 @@ class S3Browser extends ComponentBase
                 'endpoint' => $this->url,
                 'use_path_style_endpoint' => true,
                 'credentials' => [
-                        'key'    => $this->access,
-                        'secret' => $this->secret,
-                    ],
+                    'key'    => $this->access,
+                    'secret' => $this->secret,
+                ],
             ]);
         }
     }
@@ -109,8 +110,7 @@ class S3Browser extends ComponentBase
     {
         $current_prefix = '';
 
-        if (is_string($this->property('prefix')))
-        {
+        if (is_string($this->property('prefix'))) {
             $current_prefix = $this->property('prefix');
         }
 
@@ -121,22 +121,19 @@ class S3Browser extends ComponentBase
 
         $objects = [];
 
-        if (isset($objectsListResponse['Contents']))
-        {
+        if (isset($objectsListResponse['Contents'])) {
 
             foreach ($objectsListResponse['Contents'] as $object) {
 
                 $unprefixed_key = $object['Key'];
 
-                if ($current_prefix != '')
-                {
-                    $unprefixed_key = str_replace($current_prefix.'/', '', $object['Key']);
+                if ($current_prefix != '') {
+                    $unprefixed_key = str_replace($current_prefix . '/', '', $object['Key']);
                 }
 
                 $exploded_key = explode('/', $unprefixed_key);
 
-                if (count($exploded_key) == 1)
-                {
+                if (count($exploded_key) == 1) {
                     $object['ShortName'] = $exploded_key[0];
                     $objects[] = $object;
                 }
@@ -147,8 +144,7 @@ class S3Browser extends ComponentBase
         // $loc_event_resp = $this->fireEvent('getObjects', [$objects]);
         $glob_event_resp = Event::fire('mikp.s3browser.getObjects', [$this, $objects]);
 
-        if(!empty($glob_event_resp))
-        {
+        if (!empty($glob_event_resp)) {
             $objects = $glob_event_resp[0];
         }
 
@@ -159,8 +155,7 @@ class S3Browser extends ComponentBase
     {
         $current_prefix = '';
 
-        if (is_string($this->property('prefix')))
-        {
+        if (is_string($this->property('prefix'))) {
             $current_prefix = $this->property('prefix');
         }
 
@@ -174,23 +169,19 @@ class S3Browser extends ComponentBase
 
         $prefixes = [];
 
-        if (isset($objectsListResponse['Contents']))
-        {
+        if (isset($objectsListResponse['Contents'])) {
             foreach ($objectsListResponse['Contents'] as $object) {
                 $unprefixed_key = $object['Key'];
 
-                if ($current_prefix != '')
-                {
-                    foreach ($crumbs as $crumb)
-                    {
-                        $unprefixed_key = str_replace($crumb.'/', '', $unprefixed_key);
+                if ($current_prefix != '') {
+                    foreach ($crumbs as $crumb) {
+                        $unprefixed_key = str_replace($crumb . '/', '', $unprefixed_key);
                     }
                 }
 
                 $exploded_key = explode('/', $unprefixed_key);
 
-                if (count($exploded_key) >= 2)
-                {
+                if (count($exploded_key) >= 2) {
                     $prefixes[] = $exploded_key[0];
                 }
             }
@@ -202,8 +193,7 @@ class S3Browser extends ComponentBase
         // $loc_event_resp = $this->fireEvent('getPrefixes', [$prefixes]);
         $glob_event_resp = Event::fire('mikp.s3browser.getPrefixes', [$this, $prefixes, $crumbs]);
 
-        if(!empty($glob_event_resp))
-        {
+        if (!empty($glob_event_resp)) {
             $prefixes = $glob_event_resp[0];
         }
 
@@ -214,8 +204,7 @@ class S3Browser extends ComponentBase
     {
         $current_prefix = '';
 
-        if (is_string($this->property('prefix')))
-        {
+        if (is_string($this->property('prefix'))) {
             $current_prefix = $this->property('prefix');
         }
 
@@ -230,8 +219,8 @@ class S3Browser extends ComponentBase
             'active' => true,
             'name' => post('short_name'),
             'path' => post('file_name'),
-            'api_download' => $this->api_basepath.'/download?bucket='.$this->property('bucket').'&object_key='.post('file_name'),
-            'api_get' => $this->api_basepath.'/object?bucket='.$this->property('bucket').'&object_key='.post('file_name')
+            'api_download' => $this->api_basepath . '/download?bucket=' . $this->property('bucket') . '&object_key=' . urlencode(post('file_name')),
+            'api_get' => $this->api_basepath . '/object?bucket=' . $this->property('bucket') . '&object_key=' . urlencode(post('file_name'))
         ];
     }
 }
