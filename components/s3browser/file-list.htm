@@ -1,3 +1,12 @@
+{% put styles %}
+<style>
+    .s3-file-list-first-row {
+        padding-left: 0px;
+        padding-right: 0px;
+    }
+</style>
+{% endput %}
+
 <!-- prefix crumbs -->
 <p id="s3browser-crumb">
     <a href="{{ __SELF__.property('baseuri') }}">
@@ -18,7 +27,7 @@
 <table id="s3browser-files" class="table table-sm table-hover">
     <!-- table headers -->
     <tr>
-        <th style="padding-left: 0px; padding-right: 0px;"></th>
+        <th class="s3-file-list-first-row"></th>
         <th>Name</th>
         <th>Size</th>
         <th>Last Modified</th>
@@ -26,7 +35,7 @@
     <!-- folders in the list -->
     {% for prefix in __SELF__.getPrefixes() %}
     <tr class="s3browser-folder-tr">
-        <td class="text-center" style="padding-left: 0px; padding-right: 0px;">
+        <td class="text-center s3-file-list-first-row">
             <a id="s3browser-download-btn" class="btn btn-sm shadow-0"
                 href="{{ __SELF__.api_basepath }}/zip?bucket={{ __SELF__.property('bucket') }}&prefix={{ last_crumb }}{{ prefix }}"
                 target="_blank" rel="noopener noreferrer" data-mdb-toggle='tooltip' title="Download folder">
@@ -45,7 +54,7 @@
     <!-- files in the list -->
     {% for object in __SELF__.getObjects() %}
     <tr class="s3browser-file-tr" value="{{ object.Key }}">
-        <td class="text-center" style="padding-left: 0px; padding-right: 0px;">
+        <td class="text-center s3-file-list-first-row">
             <div class="btn-group btn-group-sm shadow-0">
                 <a id="s3browser-download-btn" class="btn btn-sm shadow-0"
                     href="{{ __SELF__.api_basepath }}/download?bucket={{ __SELF__.property('bucket') }}&object_key={{ object.Key | url_encode }}"

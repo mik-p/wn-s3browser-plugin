@@ -1,4 +1,13 @@
 <!-- default form -->
+{% put styles %}
+<style>
+    .s3-query-result {
+        max-height: 30rem;
+        overflow: scroll;
+    }
+</style>
+{% endput %}
+
 <form id="s3-query-form" class="mb-3" action="{{ __SELF__.api_basepath }}/select" method="GET">
     <input id="s3-query-bucket-input" type="hidden" name="bucket" value="{{ __SELF__.property('bucket') }}">
     <div class="form-outline mb-3">
@@ -151,8 +160,8 @@
 
                         // add table to view
                         jQuery('#s3-query-result-display').append(
-                            '<div class="container" style="max-height: 30rem; overflow: scroll;">'
-                            + '<table class="table table-sm table-hover table-striped" style="max-height: 30rem; overflow: scroll;">'
+                            '<div class="container s3-query-result">'
+                            + '<table class="table table-sm table-hover table-striped s3-query-result">'
                             + "<thead><tr>" + heading_row + "</tr></thead>"
                             + "<tbody>" + table_rows + "</tbody>"
                             + '</table>'

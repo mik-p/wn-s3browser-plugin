@@ -1,3 +1,15 @@
+{% put styles %}
+<style>
+    .s3-upload-success-text {
+        color: #28A74B;
+    }
+
+    .s3-upload-error-text {
+        color: #EA4335;
+    }
+</style>
+{% endput %}
+
 <form id="s3-upload-form" action="{{ __SELF__.api_basepath }}/upload?bucket={{ __SELF__.property('bucket') }}"
     method="POST" enctype="multipart/form-data">
     <div class="form-outline mb-3">
@@ -68,9 +80,9 @@
 
                     if (data[0].status == '200') {
                         // jQuery('#s3-upload-form')[0].reset();
-                        jQuery('#s3-uploadStatus').html('<small class="muted" style="color:#28A74B;">Files has uploaded successfully!</small>');
+                        jQuery('#s3-uploadStatus').html('<small class="muted upload-success-text">Files has uploaded successfully!</small>');
                     } else {
-                        jQuery('#s3-uploadStatus').html('<small class="muted" style="color:#EA4335;">Something went wrong</small>');
+                        jQuery('#s3-uploadStatus').html('<small class="muted s3-upload-error-text">Something went wrong</small>');
                     }
 
                     let message = "Successfully Uploaded:\n";
@@ -85,7 +97,7 @@
                 error: function (data) {
                     console.log(data);
 
-                    jQuery('#s3-uploadStatus').html('<small style="color:#EA4335;">File upload failed, please try again.</small>');
+                    jQuery('#s3-uploadStatus').html('<small class="muted s3-upload-error-text">File upload failed, please try again.</small>');
 
                     jQuery.wn.flashMsg({ text: 'File upload failed, please try again.', class: 'error', interval: 4 })
                     // alert(data.responseText);
