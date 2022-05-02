@@ -10,8 +10,8 @@
 </style>
 {% endput %}
 
-<form id="s3-upload-form" action="{{ __SELF__.api_basepath }}/upload?bucket={{ __SELF__.property('bucket') }}"
-    method="POST" enctype="multipart/form-data">
+<form id="s3-upload-form" action="{{ __SELF__.api_basepath }}/upload?bucket={{ __SELF__.bucket }}" method="POST"
+    enctype="multipart/form-data">
     <div class="form-outline mb-3">
         <i class="far fa-folder-open trailing"></i>
         <input id="s3-upload-file-prefix" class="form-control" type="text" name="prefix" placeholder="Path Prefix"

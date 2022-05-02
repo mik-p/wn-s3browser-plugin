@@ -9,7 +9,7 @@
 {% endput %}
 
 <form id="s3-query-form" class="mb-3" action="{{ __SELF__.api_basepath }}/select" method="GET">
-    <input id="s3-query-bucket-input" type="hidden" name="bucket" value="{{ __SELF__.property('bucket') }}">
+    <input id="s3-query-bucket-input" type="hidden" name="bucket" value="{{ __SELF__.bucket }}">
     <div class="form-outline mb-3">
         <i class="far fa-folder-open trailing">
             /

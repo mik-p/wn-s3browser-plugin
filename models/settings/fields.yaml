@@ -34,3 +34,10 @@ fields:
         placeholder: s3-secret-key
         type: password
         comment: 'the secret key for the s3 server'
+    s3bucketname:
+        label: 'Default Component S3 Bucket'
+        span: left
+        placeholder: great-bucket
+        default: great-bucket
+        type: text
+        comment: 'The S3 Bucket used by default by components'

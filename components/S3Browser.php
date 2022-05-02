@@ -27,10 +27,12 @@ class S3Browser extends ComponentBase
 
     public $api_basepath = '/api/v1/s3browser';
 
+    public $bucket = 'no-bucket';
+
     public function componentDetails()
     {
         return [
-            'name'        => 's3browser Component',
+            'name'        => 'S3 Browser',
             'description' => 's3 object browser'
         ];
     }
@@ -49,9 +51,10 @@ class S3Browser extends ComponentBase
             ],
             'bucket' => [
                 'title'             => 'bucket',
-                'description'       => 'the s3 bucket',
+                'description'       => 'the s3 bucket to view overriding the component settings',
+                'default'           => '',
                 'type'              => 'string',
-                'required'          => true,
+                // 'required'          => true, // no longer required
                 'validationPattern' => '',
                 'validationMessage' => 'the bucket property can contain only a valid bucket name'
             ],
@@ -73,6 +76,15 @@ class S3Browser extends ComponentBase
 
     public function init()
     {
+        // get bucket from setting
+        $this->bucket = Settings::get('s3bucketname', 'no-bucket');
+        // override if property present
+        if($this->property('bucket') !== '')
+        {
+            $this->bucket = $this->property('bucket');
+        }
+
+        // create client
         $this->createS3Client();
     }
 
@@ -115,7 +127,7 @@ class S3Browser extends ComponentBase
         }
 
         $objectsListResponse = $this->storage_client->listObjects([
-            'Bucket' => $this->property('bucket'),
+            'Bucket' => $this->bucket,
             'Prefix' => $current_prefix
         ]);
 
@@ -160,7 +172,7 @@ class S3Browser extends ComponentBase
         }
 
         $objectsListResponse = $this->storage_client->listObjects([
-            'Bucket' => $this->property('bucket'),
+            'Bucket' => $this->bucket,
             'Prefix' => $current_prefix
             //'Delimiter' => '/'
         ]);
@@ -219,8 +231,8 @@ class S3Browser extends ComponentBase
             'active' => true,
             'name' => post('short_name'),
             'path' => post('file_name'),
-            'api_download' => $this->api_basepath . '/download?bucket=' . $this->property('bucket') . '&object_key=' . urlencode(post('file_name')),
-            'api_get' => $this->api_basepath . '/object?bucket=' . $this->property('bucket') . '&object_key=' . urlencode(post('file_name'))
+            'api_download' => $this->api_basepath . '/download?bucket=' . $this->bucket . '&object_key=' . urlencode(post('file_name')),
+            'api_get' => $this->api_basepath . '/object?bucket=' . $this->bucket . '&object_key=' . urlencode(post('file_name'))
         ];
     }
 }

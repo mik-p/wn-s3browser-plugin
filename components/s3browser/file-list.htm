@@ -10,7 +10,7 @@
 <!-- prefix crumbs -->
 <p id="s3browser-crumb">
     <a href="{{ __SELF__.property('baseuri') }}">
-        {{ __SELF__.property('bucket') }}
+        {{ __SELF__.bucket }}
     </a>
 
     {% set last_crumb='/' %}
@@ -37,7 +37,7 @@
     <tr class="s3browser-folder-tr">
         <td class="text-center s3-file-list-first-row">
             <a id="s3browser-download-btn" class="btn btn-sm shadow-0"
-                href="{{ __SELF__.api_basepath }}/zip?bucket={{ __SELF__.property('bucket') }}&prefix={{ last_crumb }}{{ prefix }}"
+                href="{{ __SELF__.api_basepath }}/zip?bucket={{ __SELF__.bucket }}&prefix={{ last_crumb }}{{ prefix }}"
                 target="_blank" rel="noopener noreferrer" data-mdb-toggle='tooltip' title="Download folder">
                 <i class="fas fa-cloud-download-alt"></i>
             </a>
@@ -57,12 +57,12 @@
         <td class="text-center s3-file-list-first-row">
             <div class="btn-group btn-group-sm shadow-0">
                 <a id="s3browser-download-btn" class="btn btn-sm shadow-0"
-                    href="{{ __SELF__.api_basepath }}/download?bucket={{ __SELF__.property('bucket') }}&object_key={{ object.Key | url_encode }}"
+                    href="{{ __SELF__.api_basepath }}/download?bucket={{ __SELF__.bucket }}&object_key={{ object.Key | url_encode }}"
                     target="_blank" rel="noopener noreferrer">
                     <i class="fas fa-cloud-download-alt" title="Download file"></i>
                 </a>
                 <a id="s3browser-delete-btn" class="btn btn-sm shadow-0"
-                    href="{{ __SELF__.api_basepath }}/delete?bucket={{ __SELF__.property('bucket') }}&object_key={{ object.Key | url_encode }}"
+                    href="{{ __SELF__.api_basepath }}/delete?bucket={{ __SELF__.bucket }}&object_key={{ object.Key | url_encode }}"
                     target="_blank" rel="noopener noreferrer">
                     <i class="fas fa-trash" title="Delete file"></i>
                 </a>
