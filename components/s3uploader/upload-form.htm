@@ -10,43 +10,42 @@
 </style>
 {% endput %}
 
-<form id="s3-upload-form" action="{{ __SELF__.api_basepath }}/upload?bucket={{ __SELF__.bucket }}" method="POST"
-    enctype="multipart/form-data">
-    <div class="form-outline mb-3">
-        <i class="far fa-folder-open trailing"></i>
-        <input id="s3-upload-file-prefix" class="form-control" type="text" name="prefix" placeholder="Path Prefix"
-            autocomplete="off" required />
-        <label class="form-label" for="s3-upload-file-prefix">Path Prefix</label>
-    </div>
-    <input id="s3-upload-file-input" class="form-control mb-3" type="file" multiple="multiple" name="filename[]"
-        required />
-    <!-- submit -->
-    <button class="btn btn-sm shadow-0" type="submit" value="SUBMIT" form="s3-upload-form">
-        <i class="fas fa-cloud-upload-alt"></i>
-        Upload
-    </button>
-    <!-- Progress bar -->
-    <div class="row align-items-center">
-        <div class="col">
-            <div class="s3-progress">
-                <div id="s3-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated"
-                    aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" role="progressbar">
-                </div>
+{{ form_open({url: __SELF__.api_basepath ~ "/upload?bucket=" ~ __SELF__.bucket, method: "POST", enctype:
+"multipart/form-data", id: "s3-upload-form" ~ form_idx }) }}
+<div class="form-outline mb-3">
+    <i class="far fa-folder-open trailing"></i>
+    <input id="s3-upload-file-prefix" class="form-control" type="text" name="prefix" placeholder="Path Prefix"
+        autocomplete="off" required />
+    <label class="form-label" for="s3-upload-file-prefix">Path Prefix</label>
+</div>
+<input id="s3-upload-file-input" class="form-control mb-3" type="file" multiple="multiple" name="filename[]" required />
+<!-- submit -->
+<button class="btn btn-sm shadow-0" type="submit" value="SUBMIT" form="s3-upload-form{{ form_idx }}">
+    <i class="fas fa-cloud-upload-alt"></i>
+    Upload
+</button>
+<!-- Progress bar -->
+<div class="row align-items-center">
+    <div class="col">
+        <div class="s3-progress">
+            <div id="s3-progress-bar{{ form_idx }}" class="progress-bar progress-bar-striped progress-bar-animated"
+                aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" role="progressbar">
             </div>
         </div>
     </div>
-    <!-- Display upload status -->
-    <div class="row align-items-center">
-        <div class="col">
-            <div class="text-center" id="s3-uploadStatus"></div>
-        </div>
+</div>
+<!-- Display upload status -->
+<div class="row align-items-center">
+    <div class="col">
+        <div class="text-center" id="s3-uploadStatus{{ form_idx }}"></div>
     </div>
-</form>
+</div>
+{{ form_close() }}
 
 {% put scripts %}
 <script>
     jQuery(function () {
-        jQuery('#s3-upload-form').on('submit', function (e) {
+        jQuery('#s3-upload-form{{ form_idx }}').on('submit', function (e) {
             e.preventDefault();
 
             let form_data = new FormData(this);
@@ -58,8 +57,8 @@
                         if (evt.lengthComputable) {
                             var percentComplete = Math.ceil((evt.loaded / evt.total) * 100);
                             // console.log(percentComplete);
-                            jQuery("#s3-progress-bar").width(percentComplete + '%');
-                            jQuery("#s3-progress-bar").html(percentComplete + '%');
+                            jQuery("#s3-progress-bar{{ form_idx }}").width(percentComplete + '%');
+                            jQuery("#s3-progress-bar{{ form_idx }}").html(percentComplete + '%');
                         }
                     }, false);
                     return xhr;
@@ -73,16 +72,16 @@
                 cache: false,
                 processData: false,
                 beforeSend: function () {
-                    jQuery("#s3-progress-bar").width('0%');
+                    jQuery("#s3-progress-bar{{ form_idx }}").width('0%');
                 },
                 success: function (data) {
                     // console.log(data);
 
                     if (data[0].status == '200') {
                         // jQuery('#s3-upload-form')[0].reset();
-                        jQuery('#s3-uploadStatus').html('<small class="muted upload-success-text">Files has uploaded successfully!</small>');
+                        jQuery('#s3-uploadStatus{{ form_idx }}').html('<small class="muted upload-success-text">Files has uploaded successfully!</small>');
                     } else {
-                        jQuery('#s3-uploadStatus').html('<small class="muted s3-upload-error-text">Something went wrong</small>');
+                        jQuery('#s3-uploadStatus{{ form_idx }}').html('<small class="muted s3-upload-error-text">Something went wrong</small>');
                     }
 
                     let message = "Successfully Uploaded:\n";
@@ -97,7 +96,7 @@
                 error: function (data) {
                     console.log(data);
 
-                    jQuery('#s3-uploadStatus').html('<small class="muted s3-upload-error-text">File upload failed, please try again.</small>');
+                    jQuery('#s3-uploadStatus{{ form_idx }}').html('<small class="muted s3-upload-error-text">File upload failed, please try again.</small>');
 
                     jQuery.wn.flashMsg({ text: 'File upload failed, please try again.', class: 'error', interval: 4 })
                     // alert(data.responseText);
