@@ -12,7 +12,10 @@
     ],
     "require": {
         "composer/installers": "~1.0",
-        "aws/aws-sdk-php": "^3.178",
+        "league/flysystem": "^1.1",
+        "league/flysystem-aws-s3-v3": "^1.0",
+        "superbalist/flysystem-google-storage": "^7.2",
+        "league/flysystem-webdav": "^1.0",
         "greenlion/php-sql-parser": "^4.4",
         "treeware/plant": "^0.1.0"
     },

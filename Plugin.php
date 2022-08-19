@@ -6,8 +6,6 @@ class Plugin extends PluginBase
 {
     public $elevated = true;
 
-	public $require = ['Winter.User'];
-
     public function registerComponents()
     {
         return [

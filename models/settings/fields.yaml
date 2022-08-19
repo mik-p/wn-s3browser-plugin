@@ -4,40 +4,167 @@ fields:
         span: auto
         type: switch
         comment: 'activate s3 browser'
-    s3https:
-        label: HTTPS
-        span: right
-        type: switch
-        comment: 'force https'
-    s3url:
-        label: 'S3 Server URL'
-        span: left
-        placeholder: 'http://s3.com'
-        type: text
-        comment: 'the URL to the S3 server'
-    s3region:
-        label: 'S3 Region'
-        span: right
-        placeholder: us-east-1
-        default: us-east-1
-        type: text
-        comment: 'the s3 region'
-    s3accesskey:
-        label: 'S3 Access Key'
-        span: left
-        placeholder: s3-access-key
-        type: text
-        comment: 'the access key for the s3 server'
-    s3secretkey:
-        label: 'S3 Secret Key'
-        span: right
-        placeholder: s3-secret-key
-        type: password
-        comment: 'the secret key for the s3 server'
-    s3bucketname:
-        label: 'Default Component S3 Bucket'
-        span: left
-        placeholder: great-bucket
-        default: great-bucket
-        type: text
-        comment: 'The S3 Bucket used by default by components'
+
+tabs:
+    fields:
+        # aws s3
+        s3enable:
+            label: Enable
+            span: left
+            type: switch
+            comment: 'enable s3'
+            tab: AWS S3
+        s3url:
+            label: 'S3 Server URL'
+            span: left
+            placeholder: 'http://s3.com'
+            type: text
+            comment: 'the URL to the S3 server'
+            tab: AWS S3
+        s3https:
+            label: HTTPS
+            span: right
+            type: switch
+            comment: 'force https'
+            tab: AWS S3
+        s3region:
+            label: 'S3 Region'
+            span: right
+            placeholder: us-east-1
+            default: us-east-1
+            type: text
+            comment: 'the s3 region'
+            tab: AWS S3
+        s3accesskey:
+            label: 'S3 Access Key'
+            span: left
+            placeholder: s3-access-key
+            type: text
+            comment: 'the access key for the s3 server'
+            tab: AWS S3
+        s3secretkey:
+            label: 'S3 Secret Key'
+            span: right
+            placeholder: s3-secret-key
+            type: password
+            comment: 'the secret key for the s3 server'
+            tab: AWS S3
+        s3bucketname:
+            label: 'Default Component S3 Bucket'
+            span: left
+            placeholder: great-bucket
+            default: great-bucket
+            type: text
+            comment: 'The S3 Bucket used by default by components'
+            tab: AWS S3
+
+        # google cloud storage
+        gcpenable:
+            label: Enable
+            span: left
+            type: switch
+            comment: 'enable google cloud storage'
+            tab: Google Cloud Storage
+        gcpurl:
+            label: 'GCP Server URL'
+            span: left
+            placeholder: 'https://gcp-store.com'
+            type: text
+            comment: 'the URL to the GCP storage server'
+            tab: Google Cloud Storage
+        gcpregion:
+            label: 'GCP Region'
+            span: right
+            placeholder: us-east-1
+            default: us-east-1
+            type: text
+            comment: 'the GCP storage region'
+            tab: Google Cloud Storage
+        gcpaccesskey:
+            label: 'GCP Access Key'
+            span: left
+            placeholder: gcp-access-key
+            type: text
+            comment: 'the access key for the GCP storage server'
+            tab: Google Cloud Storage
+        gcpsecretkey:
+            label: 'GCP Secret Key'
+            span: right
+            placeholder: gcp-secret-key
+            type: password
+            comment: 'the secret key for the GCP storage server'
+            tab: Google Cloud Storage
+        gcpbucketname:
+            label: 'Default Component GCP storage Bucket'
+            span: left
+            placeholder: great-bucket
+            default: great-bucket
+            type: text
+            comment: 'The GCP storage Bucket used by default by components'
+            tab: Google Cloud Storage
+
+        # webdav server
+        webdavenable:
+            label: Enable
+            span: left
+            type: switch
+            comment: 'enable webdav'
+            tab: WebDAV Server
+        webdavuri:
+            label: WebDAV URI
+            span: left
+            placeholder: 'http://webdav.com'
+            type: text
+            comment: 'the URI to the WebDAV server'
+            tab: WebDAV Server
+        webdavuser:
+            label: 'WebDAV User Name'
+            span: left
+            placeholder: webdav-user
+            type: text
+            comment: 'the user name for the webdav server'
+            tab: WebDAV Server
+        webdavpassword:
+            label: 'WebDAV User Password'
+            span: right
+            placeholder: webdav-password
+            type: password
+            comment: 'the user password for the webdav server'
+            tab: WebDAV Server
+
+        # ftp server
+        ftpenable:
+            label: Enable
+            span: left
+            type: switch
+            comment: 'enable ftp'
+            tab: FTP Server
+        ftphost:
+            label: 'FTP Server Host'
+            span: left
+            placeholder: 'ftphost.com'
+            type: text
+            comment: 'the ftp server hostname'
+            tab: FTP Server
+        ftproot:
+            label: 'FTP Root Path'
+            span: right
+            placeholder: /root/path
+            default: /root/path
+            type: text
+            comment: 'the ftp server file root path'
+            tab: FTP Server
+        ftpuser:
+            label: 'FTP User Name'
+            span: left
+            placeholder: ftp-user
+            type: text
+            comment: 'the user name for the ftp server'
+            tab: FTP Server
+        ftppassword:
+            label: 'FTP User Password'
+            span: right
+            placeholder: ftp-password
+            type: password
+            comment: 'the user password for the ftp server'
+            tab: FTP Server

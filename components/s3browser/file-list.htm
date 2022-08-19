@@ -4,6 +4,7 @@
         padding-left: 0px;
         padding-right: 0px;
     }
+
 </style>
 {% endput %}
 
@@ -13,13 +14,21 @@
         {{ __SELF__.bucket }}
     </a>
 
-    {% set last_crumb='/' %}
+    {% set last_crumb='' %}
     {% for crumb in __SELF__.getBreadCrumbs() %}
+
+    {% if last_crumb != '' %}
+    {% set crumb_href='/' ~ [__SELF__.property('baseuri'), last_crumb, crumb] | join('/') | trim('/', side='left') %}
+    {% set last_crumb=([last_crumb, crumb] | join('/')) %}
+    {% else %}
+    {% set crumb_href='/' ~ [__SELF__.property('baseuri'), crumb] | join('/') | trim('/', side='left') %}
+    {% set last_crumb=crumb %}
+    {% endif %}
+
     /
-    <a href="{{ __SELF__.property('baseuri') }}{{ last_crumb }}{{ crumb }}">
+    <a href="{{ crumb_href }}">
         {{ crumb }}
     </a>
-    {% set last_crumb=last_crumb~crumb~'/' %}
     {% endfor %}
 </p>
 
@@ -43,7 +52,7 @@
             </a>
         </td>
         <td>
-            <a href="{{ __SELF__.property('baseuri') }}{{ last_crumb }}{{ prefix }}">
+            <a href="/{{ [__SELF__.property('baseuri'), last_crumb, prefix] | join('/') | trim('/', side='left')}}">
                 {{prefix}}/
             </a>
         </td>
@@ -69,7 +78,7 @@
             </div>
         </td>
         <td class="s3browser-file-name-td">
-            <a href="{{ __SELF__.property('baseuri') }}{{ last_crumb }}{{ prefix }}"
+            <a href="/{{ [__SELF__.property('baseuri'), last_crumb, prefix] | join('/') | trim('/', side='left')}}"
                 data-request="{{ __SELF__ }}::onFileDetails"
                 data-request-update="'{{ __SELF__ }}::file-details': '#fileDetails'"
                 data-request-data="file_name: '{{ object.Key }}', short_name: '{{ object.ShortName }}'"

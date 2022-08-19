@@ -6,10 +6,8 @@ use Illuminate\Routing\Controller;
 
 use mikp\s3browser\Models\Settings;
 
-use Aws\Exception\AwsException;
-use Aws\S3\S3Client;
-
-use PHPSQLParser\PHPSQLParser;
+use mikp\s3browser\Classes\StorageClient;
+use mikp\s3browser\Classes\StorageException;
 
 use Response;
 use Illuminate\Http\Request;
@@ -21,14 +19,6 @@ class API extends Controller
     public $storage_client;
 
     public $activated = false;
-
-    public $url = '';
-
-    public $region = 'us-east-1';
-
-    public $access = '';
-
-    public $secret = '';
 
     public function __construct()
     {
@@ -65,7 +55,7 @@ class API extends Controller
     // list full path of objects in a bucket
     public function list(Request $req, $bucket)
     {
-        $keys = $this->listObjects($bucket);
+        $keys = $this->storage_client->listObjects($bucket);
 
         return response()->json(['objects' => $keys]);
     }
@@ -83,11 +73,11 @@ class API extends Controller
 
         try {
             // get object
-            $object = $this->getObject($bucket, $object_key);
+            $object = $this->storage_client->getObject($bucket, $object_key);
 
             // send file to browser as a download
             return Response::make($object['Body'])->header('Content-Type', $object['ContentType']);
-        } catch (S3Exception $e) {
+        } catch (StorageException $e) {
             return Response::make($e->getMessage(), 500);
         }
 
@@ -129,12 +119,12 @@ class API extends Controller
 
         // upload the file to s3
         try {
-            $result = $this->storage_client->putObject([
-                'Bucket' => $bucket,
-                'Key'    => $object_key,
-                'SourceFile' => $req->filename->path(),
-                'ContentType' => $req->filename->getMimeType()
-            ]);
+            $result = $this->storage_client->putObject(
+                $bucket,
+                $object_key,
+                $req->filename->path(),
+                $req->filename->getMimeType()
+            );
 
             return Response::json([
                 'statusCode' => $result['@metadata']['statusCode'],
@@ -142,7 +132,7 @@ class API extends Controller
                 'content_type' => $req->filename->getMimeType(),
                 'warnings' => $warnings
             ]);
-        } catch (S3Exception $e) {
+        } catch (StorageException $e) {
             return Response::make($e->getMessage(), 500);
         }
 
@@ -162,23 +152,12 @@ class API extends Controller
         }
 
         try {
-            // // create the presigned URL
-            // $cmd = $this->storage_client->getCommand('GetObject', [
-            //     'Bucket' => $bucket,
-            //     'Key' => $object_key
-            // ]);
-
-            // $request = $this->storage_client->createPresignedRequest($cmd, $duration_str);
-
-            // // Get the actual presigned-url
-            // $presignedUrl = (string)$request->getUri();
-
             // create the presigned URL
-            $presignedUrl = $this->createPresignedURL($bucket, $object_key, $duration_str);
+            $presignedUrl = $this->storage_client->createPresignedURL($bucket, $object_key, $duration_str);
 
             // send presigned url back
             return Response::make($presignedUrl);
-        } catch (S3Exception $e) {
+        } catch (StorageException $e) {
             return Response::make($e->getMessage(), 500);
         }
 
@@ -197,13 +176,13 @@ class API extends Controller
         }
 
         try {
-            $result = $this->storage_client->deleteObject([
-                'Bucket' => $bucket,
-                'Key' => $object_key,
-            ]);
+            $result = $this->storage_client->deleteObject(
+                $bucket,
+                $object_key
+            );
 
             return response()->json($result, 200);
-        } catch (S3Exception $e) {
+        } catch (StorageException $e) {
             return Response::make($e->getMessage(), 500);
         }
 
@@ -223,10 +202,10 @@ class API extends Controller
 
         try {
             // send object back
-            $object = $this->storage_client->getObject([
-                'Bucket' => $bucket,
-                'Key' => $object_key
-            ]);
+            $object = $this->storage_client->getObject(
+                $bucket,
+                $object_key
+            );
 
             // make a file name for the download
             $exploded_key = explode('/', $object_key);
@@ -245,7 +224,7 @@ class API extends Controller
                 basename($file_name),
                 $headers
             );
-        } catch (S3Exception $e) {
+        } catch (StorageException $e) {
             return Response::make($e->getMessage(), 500);
         }
 
@@ -277,12 +256,12 @@ class API extends Controller
 
         foreach ($req->filename as $file_name) {
             try {
-                $result = $this->storage_client->putObject([
-                    'Bucket' => $bucket,
-                    'Key'    => $prefix . '/' . $file_name->getClientOriginalName(),
-                    'SourceFile' => $file_name->path(),
-                    'ContentType' => $file_name->getMimeType()
-                ]);
+                $result = $this->storage_client->putObject(
+                    $bucket,
+                    $prefix . '/' . $file_name->getClientOriginalName(),
+                    $file_name->path(),
+                    $file_name->getMimeType()
+                );
 
                 if ($result['@metadata']['statusCode'] != 200) {
                     return Response::make('upload of file "' . $file_name->getClientOriginalName() . '" failed', 500);
@@ -292,7 +271,7 @@ class API extends Controller
                     'file' => $file_name->getClientOriginalName(),
                     'status' => $result['@metadata']['statusCode']
                 ];
-            } catch (S3Exception $e) {
+            } catch (StorageException $e) {
                 return Response::make($e->getMessage(), 500);
             }
         }
@@ -312,76 +291,68 @@ class API extends Controller
         }
 
         // get the list of objects in this folder
-        $objectsListResponse = $this->storage_client->listObjects([
-            'Bucket' => $bucket,
-            'Prefix' => ltrim($prefix, $prefix[0])
-        ]);
+        $objects_metadata = $this->storage_client->listObjects($bucket, ltrim($prefix, $prefix[0]));
 
-        if (isset($objectsListResponse['Contents'])) {
-            if (count($objectsListResponse['Contents']) == 0) {
-                // empty folder
-                return Response::make('folder is empty', 200);
-            }
+        if (count($objects_metadata) == 0) {
+            // empty folder
+            return Response::make('folder is empty', 200);
+        }
 
-            // do some file system stuff
-            $temp_dir = 's3browser-zip-tmp';
-            Storage::makeDirectory($temp_dir);
-            Storage::delete(Storage::allFiles($temp_dir)); // clear the old request
+        // do some file system stuff
+        $temp_dir = 's3browser-zip-tmp';
+        Storage::makeDirectory($temp_dir);
+        Storage::delete(Storage::allFiles($temp_dir)); // clear the old request
 
-            // create a zip file name
-            $zip_file_name_end = date("Ymd-His") . '.zip';
-            $zip_file_name_start = '';
+        // create a zip file name
+        $zip_file_name_end = date("Ymd-His") . '.zip';
+        $zip_file_name_start = '';
 
-            foreach (explode('/', ltrim($prefix, $prefix[0])) as $crumb) {
-                $zip_file_name_start .= $crumb . '-';
-            }
+        foreach (explode('/', ltrim($prefix, $prefix[0])) as $crumb) {
+            $zip_file_name_start .= $crumb . '-';
+        }
 
-            $zip_file_name = $zip_file_name_start . $zip_file_name_end;
+        $zip_file_name = $zip_file_name_start . $zip_file_name_end;
 
-            // compress the files into a download-able zip
-            $zip = new ZipArchive;
+        // compress the files into a download-able zip
+        $zip = new ZipArchive;
 
-            if ($zip->open(Storage::path($temp_dir) . '/' . $zip_file_name, ZipArchive::CREATE) === TRUE) {
-                // download all the objects
-                foreach ($objectsListResponse['Contents'] as $object) {
-                    // make a file name
-                    $exploded_key = explode('/', $object['Key']);
-                    $file_name = end($exploded_key);
-                    array_pop($exploded_key);
-                    foreach ($exploded_key as $name_part) {
-                        $file_name = $name_part . '-' . $file_name;
-                    }
-
-                    // get the object
-                    $object = $this->storage_client->getObject([
-                        'Bucket' => $bucket,
-                        'Key' => $object['Key']
-                    ]);
-
-                    Storage::put($temp_dir . '/' . $file_name, $object['Body']);
-
-                    // Add File in ZipArchive
-                    $zip->addFile(Storage::path($temp_dir) . '/' . $file_name, $file_name);
+        if ($zip->open(Storage::path($temp_dir) . '/' . $zip_file_name, ZipArchive::CREATE) === TRUE) {
+            // download all the objects
+            foreach ($objects_metadata as $object) {
+                // make a file name
+                $exploded_key = explode('/', $object['Key']);
+                $file_name = end($exploded_key);
+                array_pop($exploded_key);
+                foreach ($exploded_key as $name_part) {
+                    $file_name = $name_part . '-' . $file_name;
                 }
 
-                // close after done
-                $zip->close();
+                // get the object
+                $object = $this->storage_client->getObject($bucket, $object['Key']);
+
+                Storage::put($temp_dir . '/' . $file_name, $object['Body']);
+
+                // Add File in ZipArchive
+                $zip->addFile(Storage::path($temp_dir) . '/' . $file_name, $file_name);
             }
 
-            // Create Download Response
-            $zip_file_path = $temp_dir . '/' . $zip_file_name;
+            // close after done
+            $zip->close();
+        }
 
-            if (Storage::exists($zip_file_path)) {
-                return Response::streamDownload(
-                    function () use ($zip_file_path) {
-                        $zip_contents = Storage::get($zip_file_path);
-                        echo $zip_contents;
-                    },
-                    basename($zip_file_name)
-                );
+        // Create Download Response
+        $zip_file_path = $temp_dir . '/' . $zip_file_name;
 
-                // return Storage::download($zip_file_path);
-            }
+        if (Storage::exists($zip_file_path)) {
+            return Response::streamDownload(
+                function () use ($zip_file_path) {
+                    $zip_contents = Storage::get($zip_file_path);
+                    echo $zip_contents;
+                },
+                basename($zip_file_name)
+            );
+
+            // return Storage::download($zip_file_path);
         }
 
         return Response::make('not found', 404);
@@ -404,14 +375,14 @@ class API extends Controller
         }
 
         try {
-            $response_json = $this->call_select($bucket, $object_key, $select_query);
+            $response_json = $this->storage_client->call_select($bucket, $object_key, $select_query);
 
             if ($response_json['error_code'] == 500) {
                 return Response::make('could not determine file delimiting', 500);
             }
 
             return Response::json($response_json);
-        } catch (S3Exception $e) {
+        } catch (StorageException $e) {
             return Response::make($e->getMessage(), 500);
         }
 
@@ -423,190 +394,10 @@ class API extends Controller
     {
         // get settings
         $this->activated = Settings::get('s3activated', false);
-        $this->url = Settings::get('s3url', 'no-url');
-        $this->region = Settings::get('s3region', 'us-east-1');
-        $this->access = Settings::get('s3accesskey', 'no-access');
-        $this->secret = Settings::get('s3secretkey', 'no-secret');
 
         if ($this->activated) {
             // connect to s3 with given credentials
-            $this->storage_client = new S3Client([
-                'version' => 'latest',
-                'region'  => $this->region,
-                'endpoint' => $this->url,
-                'use_path_style_endpoint' => true,
-                'credentials' => [
-                    'key'    => $this->access,
-                    'secret' => $this->secret,
-                ],
-            ]);
+            $this->storage_client = new StorageClient();
         }
-    }
-
-    public function listBuckets()
-    {
-        $bucketListResponse = $this->storage_client->listBuckets();
-        return $bucketListResponse['Buckets'];
-    }
-
-    public function listObjects($bucket)
-    {
-        $objectsListResponse = $this->storage_client->listObjects([
-            'Bucket' => $bucket
-        ]);
-
-        $object_keys = [];
-
-        if (isset($objectsListResponse['Contents'])) {
-            foreach ($objectsListResponse['Contents'] as $object) {
-                $object_keys[] = $object['Key'];
-            }
-        }
-
-        return $object_keys;
-    }
-
-    public function getObject($bucket, $object_key)
-    {
-        // get object
-        $object = $this->storage_client->getObject([
-            'Bucket' => $bucket,
-            'Key' => $object_key
-        ]);
-
-        // send object back
-        return $object;
-    }
-
-    public function createPresignedURL($bucket, $object_key, $duration_str)
-    {
-        // create the presigned URL
-        $cmd = $this->storage_client->getCommand('GetObject', [
-            'Bucket' => $bucket,
-            'Key' => $object_key
-        ]);
-
-        $request = $this->storage_client->createPresignedRequest($cmd, $duration_str);
-
-        // Get the actual presigned-url
-        $presignedUrl = (string)$request->getUri();
-
-        return $presignedUrl;
-    }
-
-    public function call_select($bucket, $object_key, $select_query)
-    {
-        $parser = new PHPSQLParser();
-        $parsed_query = $parser->parse($select_query);
-
-        // retain header
-        $result = $this->storage_client->selectObjectContent([
-            'Bucket' => $bucket,
-            'Key' => $object_key,
-
-            'ExpressionType' => 'SQL',
-            'Expression' => 'select * from s3object limit 1',
-
-            'InputSerialization' => [
-                'CSV' => [
-                    'FileHeaderInfo' => 'NONE',
-                    'RecordDelimiter' => '\n',
-                    'FieldDelimiter' => ',',
-                ]
-            ],
-
-            'OutputSerialization' => ['CSV' => []]
-        ]);
-
-        foreach ($result['Payload'] as $event) {
-            if (isset($event['Records'])) {
-                $header_str = (string) $event['Records']['Payload'];
-            } elseif (isset($event['Stats'])) {
-            } elseif (isset($event['End'])) {
-            }
-        }
-
-        // filter the headings that aren't needed
-        $valid_headings = [];
-
-        $base_expr_star = str_contains($parsed_query["SELECT"][0]["base_expr"], "*");
-
-        if ($base_expr_star) {
-            $valid_headings = explode(',', str_replace("\n", "", $header_str));
-        } else {
-            foreach (explode(',', $header_str) as $heading) {
-                if (str_contains($select_query, $heading)) {
-                    $valid_headings[] = str_replace("\n", "", $heading);
-                }
-            }
-        }
-
-        // perform the actual query
-        $result = $this->storage_client->selectObjectContent([
-            'Bucket' => $bucket,
-            'Key' => $object_key,
-
-            'ExpressionType' => 'SQL',
-            'Expression' => $select_query,
-
-            'InputSerialization' => [
-                'CSV' => [
-                    'FileHeaderInfo' => 'USE',
-                    'RecordDelimiter' => '\n',
-                    'FieldDelimiter' => ',',
-                ]
-            ],
-
-            'OutputSerialization' => ['CSV' => []]
-        ]);
-
-        $response_json = [
-            'object_key' => $object_key,
-            'select_query_str' => $select_query,
-            'select_query_obj' => $parser->parse($select_query),
-            'header_str' => $header_str,
-            'data_header' => $valid_headings
-        ];
-
-        foreach ($result['Payload'] as $event) {
-            if (isset($event['Records'])) {
-                $payload = (string) $event['Records']['Payload'];
-
-                // payload raw
-                $response_json['records'][] = $payload;
-
-                // payload as 2d array
-                if (str_contains($payload, "\n")) {
-                    $payload = str_replace("\r", "", $payload);
-                    $records = explode("\n", $payload);
-                } elseif (str_contains($payload, "\r")) {
-                    $records = explode("\r", $payload);
-                } else {
-                    // return Response::make('could not determine file delimiting', 500);
-                    $response_json['end'] = 'Failed';
-                    $response_json['error_code'] = 500;
-                    $response_json['error_message'] = 'could not determine file delimiting';
-                    return $response_json;
-                }
-
-                // get the second dimension of the data
-                // guess that the dimensionality is the header length size
-                $second_dim = count($valid_headings);
-
-                foreach ($records as $record) {
-                    // if the dimensions match add this entry otherwise throw it out it causes problems
-                    $row_data = explode(',', $record);
-                    if (count($row_data) == $second_dim) {
-                        $response_json['data'][] = $row_data;
-                    }
-                }
-            } elseif (isset($event['Stats'])) {
-                $response_json['stats'] = 'Processed ' . $event['Stats']['Details']['BytesProcessed'] . ' bytes';
-            } elseif (isset($event['End'])) {
-                $response_json['end'] = 'Complete';
-            }
-        }
-
-        return $response_json;
     }
 }

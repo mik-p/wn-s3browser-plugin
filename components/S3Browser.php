@@ -6,24 +6,15 @@ use Cms\Classes\ComponentBase;
 
 use mikp\s3browser\Models\Settings;
 
-use Event;
+use mikp\s3browser\Classes\StorageClient;
 
-use Aws\Exception\AwsException;
-use Aws\S3\S3Client;
+use Event;
 
 class S3Browser extends ComponentBase
 {
     public $storage_client;
 
     public $activated = false;
-
-    public $url = '';
-
-    public $region = 'us-east-1';
-
-    public $access = '';
-
-    public $secret = '';
 
     public $api_basepath = '/api/v1/s3browser';
 
@@ -92,30 +83,16 @@ class S3Browser extends ComponentBase
     {
         // get settings
         $this->activated = Settings::get('s3activated', false);
-        $this->url = Settings::get('s3url', 'no-url');
-        $this->region = Settings::get('s3region', 'us-east-1');
-        $this->access = Settings::get('s3accesskey', 'no-access');
-        $this->secret = Settings::get('s3secretkey', 'no-secret');
 
         if ($this->activated) {
             // connect to s3 with given credentials
-            $this->storage_client = new S3Client([
-                'version' => 'latest',
-                'region'  => $this->region,
-                'endpoint' => $this->url,
-                'use_path_style_endpoint' => true,
-                'credentials' => [
-                    'key'    => $this->access,
-                    'secret' => $this->secret,
-                ],
-            ]);
+            $this->storage_client = new StorageClient();
         }
     }
 
     public function listBuckets()
     {
-        $bucketListResponse = $this->storage_client->listBuckets();
-        return $bucketListResponse['Buckets'];
+        return $this->storage_client->listBuckets();
     }
 
     public function getObjects()
@@ -126,31 +103,7 @@ class S3Browser extends ComponentBase
             $current_prefix = $this->property('prefix');
         }
 
-        $objectsListResponse = $this->storage_client->listObjects([
-            'Bucket' => $this->bucket,
-            'Prefix' => $current_prefix
-        ]);
-
-        $objects = [];
-
-        if (isset($objectsListResponse['Contents'])) {
-
-            foreach ($objectsListResponse['Contents'] as $object) {
-
-                $unprefixed_key = $object['Key'];
-
-                if ($current_prefix != '') {
-                    $unprefixed_key = str_replace($current_prefix . '/', '', $object['Key']);
-                }
-
-                $exploded_key = explode('/', $unprefixed_key);
-
-                if (count($exploded_key) == 1) {
-                    $object['ShortName'] = $exploded_key[0];
-                    $objects[] = $object;
-                }
-            }
-        }
+        $objects = $this->storage_client->getObjects($this->bucket, $current_prefix);
 
         // allow events to modify the objects, this allows auth to be added
         // $loc_event_resp = $this->fireEvent('getObjects', [$objects]);
@@ -171,35 +124,8 @@ class S3Browser extends ComponentBase
             $current_prefix = $this->property('prefix');
         }
 
-        $objectsListResponse = $this->storage_client->listObjects([
-            'Bucket' => $this->bucket,
-            'Prefix' => $current_prefix
-            //'Delimiter' => '/'
-        ]);
-
+        $prefixes = $this->storage_client->listPrefixes($this->bucket, $current_prefix);
         $crumbs = $this->getBreadCrumbs();
-
-        $prefixes = [];
-
-        if (isset($objectsListResponse['Contents'])) {
-            foreach ($objectsListResponse['Contents'] as $object) {
-                $unprefixed_key = $object['Key'];
-
-                if ($current_prefix != '') {
-                    foreach ($crumbs as $crumb) {
-                        $unprefixed_key = str_replace($crumb . '/', '', $unprefixed_key);
-                    }
-                }
-
-                $exploded_key = explode('/', $unprefixed_key);
-
-                if (count($exploded_key) >= 2) {
-                    $prefixes[] = $exploded_key[0];
-                }
-            }
-        }
-
-        $prefixes = array_unique($prefixes);
 
         // allow events to modify the prefixes, this allows auth to be added
         // $loc_event_resp = $this->fireEvent('getPrefixes', [$prefixes]);
@@ -220,9 +146,7 @@ class S3Browser extends ComponentBase
             $current_prefix = $this->property('prefix');
         }
 
-        $crumbs = explode('/', $current_prefix);
-
-        return $crumbs;
+        return $this->storage_client->getBreadCrumbs($current_prefix);
     }
 
     public function onFileDetails()
