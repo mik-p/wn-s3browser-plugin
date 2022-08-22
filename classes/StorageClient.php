@@ -102,16 +102,21 @@ class StorageClient
     }
 
     // // list available buckets
-    // public function listBuckets()
-    // {
-    //     $bucketListResponse = $this->storage_client->listBuckets();
-    //     return $bucketListResponse['Buckets'];
-    // }
+    public function listBuckets()
+    {
+        // check if the storage system is s3 compliant
+        if (!$this->storage_filesystem->getAdapter() instanceof \League\Flysystem\AwsS3v3\AwsS3Adapter) {
+            throw new StorageException("current storage system doesn't support this operation");
+        }
+
+        $bucketListResponse = $this->storage_client->listBuckets();
+        return $bucketListResponse['Buckets'];
+    }
 
     // list object keys
     public function listObjects($object)
     {
-        $objectsListResponse = $this->storage_filesystem->listContents('/', true);
+        $objectsListResponse = $this->storage_filesystem->listContents(null, true);
 
         $object_keys = [];
 
@@ -189,94 +194,143 @@ class StorageClient
     // get the desired object by key
     public function getObject($bucket, $object_key)
     {
+        // get content details
+        $mime_type = $this->storage_filesystem->getMimetype($object_key);
+
         // get object
-        // $object = $this->storage_filesystem->read($object_key);
+        $object = $this->storage_filesystem->read($object_key);
 
-        // var_dump($object);
-
-        // die;
-
-        // if (!$object) {
-        //     throw new StorageException("failed to retrieve object");
-        // }
-
-        try {
-            $object = $this->storage_client->getObject([
-                'Bucket' => $bucket,
-                'Key' => $object_key
-            ]);
-
-            var_dump($object);
-
-            die;
-
-        } catch (S3Exception $e) {
-            throw new StorageException($e->getMessage());
+        if (!$object) {
+            throw new StorageException("failed to retrieve object");
         }
 
         // send object back
-        return $object;
+        return [
+            "ContentType" => $mime_type,
+            "Body" => $object
+        ];
+
+        // try {
+        //     $object = $this->storage_client->getObject([
+        //         'Bucket' => $bucket,
+        //         'Key' => $object_key
+        //     ]);
+
+        // } catch (S3Exception $e) {
+        //     throw new StorageException($e->getMessage());
+        // }
+
+        // // send object back
+        // return $object;
     }
 
     // put the desired object by key and path
     public function putObject($bucket, $object_key, $path, $mime_type)
     {
         // upload the file
-        try {
-            $result = $this->storage_client->putObject([
-                'Bucket' => $bucket,
-                'Key'    => $object_key,
-                'SourceFile' => $path,
-                'ContentType' => $mime_type
-            ]);
-        } catch (S3Exception $e) {
-            throw new StorageException($e->getMessage());
+        $response = $this->storage_filesystem->put($object_key, file_get_contents($path), ["mimetype" => $mime_type]);
+        if (!$response) {
+            throw new StorageException("failed to upload object");
         }
 
-        return $result;
+        return [
+            "@metadata" => [
+                "statusCode" => 200
+            ],
+            "success" => $response
+        ];
+
+        // try {
+        //     $result = $this->storage_client->putObject([
+        //         'Bucket' => $bucket,
+        //         'Key'    => $object_key,
+        //         'SourceFile' => $path,
+        //         'ContentType' => $mime_type
+        //     ]);
+        // } catch (S3Exception $e) {
+        //     throw new StorageException($e->getMessage());
+        // }
+
+        // return $result;
     }
 
     // delete the desired object by key
     public function deleteObject($bucket, $object_key)
     {
         // delete the file
-        try {
-            $result = $this->storage_client->deleteObject([
-                'Bucket' => $bucket,
-                'Key' => $object_key,
-            ]);
-        } catch (S3Exception $e) {
-            throw new StorageException($e->getMessage());
+        $response = $this->storage_filesystem->delete($object_key);
+        if (!$response) {
+            throw new StorageException("failed to delete object");
         }
 
-        return $result;
+        return [
+            'DeleteMarker' => $response
+        ];
+
+        // try {
+        //     $result = $this->storage_client->deleteObject([
+        //         'Bucket' => $bucket,
+        //         'Key' => $object_key,
+        //     ]);
+        // } catch (S3Exception $e) {
+        //     throw new StorageException($e->getMessage());
+        // }
+
+        // return $result;
     }
 
     // get all objects metadata within a prefix
     public function getObjects($bucket, $prefix)
     {
-        $objectsListResponse = $this->storage_client->listObjects([
-            'Bucket' => $bucket,
-            'Prefix' => $prefix
-        ]);
+        // $objectsListResponse = $this->storage_client->listObjects([
+        //     'Bucket' => $bucket,
+        //     'Prefix' => $prefix
+        // ]);
+
+        $objectsListResponse = $this->storage_filesystem->listContents($prefix, true);
 
         $objects = [];
 
-        if (isset($objectsListResponse['Contents'])) {
+        // if (isset($objectsListResponse['Contents'])) {
 
-            foreach ($objectsListResponse['Contents'] as $object) {
+        //     foreach ($objectsListResponse['Contents'] as $object) {
 
-                $unprefixed_key = $object['Key'];
+        //         $unprefixed_key = $object['Key'];
 
-                if ($prefix != '') {
-                    $unprefixed_key = str_replace($prefix . '/', '', $object['Key']);
-                }
+        //         if ($prefix != '') {
+        //             $unprefixed_key = str_replace($prefix . '/', '', $object['Key']);
+        //         }
 
-                $exploded_key = explode('/', $unprefixed_key);
+        //         $exploded_key = explode('/', $unprefixed_key);
 
-                if (count($exploded_key) == 1) {
-                    $object['ShortName'] = $exploded_key[0];
-                    $objects[] = $object;
+        //         if (count($exploded_key) == 1) {
+        //             $object['ShortName'] = $exploded_key[0];
+        //             $objects[] = $object;
+        //         }
+        //     }
+        // }
+
+        if (isset($objectsListResponse)) {
+
+            foreach ($objectsListResponse as $object) {
+
+                if ($object['type'] == 'file') {
+
+                    $unprefixed_key = $object['path'];
+
+                    if ($prefix != '') {
+                        $unprefixed_key = str_replace($prefix . '/', '', $object['path']);
+                    }
+
+                    $exploded_key = explode('/', $unprefixed_key);
+
+                    if (count($exploded_key) == 1) {
+                        $object['Key'] = $object["path"];
+                        $object['ShortName'] = $object["basename"];
+                        $object['Size'] = $object["size"];
+                        $object['LastModified'] = date(DATE_ISO8601, $object["timestamp"]);
+                        $objects[] = $object;
+                    }
                 }
             }
         }
@@ -287,6 +341,11 @@ class StorageClient
     // create a presigned url
     public function createPresignedURL($bucket, $object_key, $duration_str)
     {
+        // check if the storage system is s3 compliant
+        if (!$this->storage_filesystem->getAdapter() instanceof \League\Flysystem\AwsS3v3\AwsS3Adapter) {
+            throw new StorageException("current storage system doesn't support this operation");
+        }
+
         // create the presigned URL
         $cmd = $this->storage_client->getCommand('GetObject', [
             'Bucket' => $bucket,
@@ -307,6 +366,11 @@ class StorageClient
 
     public function call_select($bucket, $object_key, $select_query)
     {
+        // check if the storage system is s3 compliant
+        if (!$this->storage_filesystem->getAdapter() instanceof \League\Flysystem\AwsS3v3\AwsS3Adapter) {
+            throw new StorageException("current storage system doesn't support this operation");
+        }
+
         $parser = new PHPSQLParser();
         $parsed_query = $parser->parse($select_query);
 
