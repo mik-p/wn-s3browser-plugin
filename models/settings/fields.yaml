@@ -4,6 +4,11 @@ fields:
         span: auto
         type: switch
         comment: 'activate s3 browser'
+    s3usecache:
+        label: Use Cache
+        span: auto
+        type: switch
+        comment: 'use caching for storage meta-data'
 
 tabs:
     fields:

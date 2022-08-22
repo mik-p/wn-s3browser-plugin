@@ -12,9 +12,13 @@ use PHPSQLParser\PHPSQLParser;
 
 class StorageClient
 {
+    // filesystem
     public $storage_client;
     public $storage_adapter;
     public $storage_filesystem;
+    // cache
+    public $storage_cache;
+    public $storage_cache_adapter;
 
     public function __construct()
     {
@@ -94,11 +98,24 @@ class StorageClient
     // create the storage filesystem
     public function createFilesystem()
     {
+        // create a cache store
+        $this->storage_cache = new \League\Flysystem\Cached\Storage\Memory();
+
         // create an adapter
         $this->createAdapter();
 
+        // add cache to adapter
+        $this->storage_cache_adapter = new \League\Flysystem\Cached\CachedAdapter(
+            $this->storage_adapter,
+            $this->storage_cache
+        );
+
         // create a filesystem
-        $this->storage_filesystem = new \League\Flysystem\Filesystem($this->storage_adapter);
+        if (Settings::get('s3usecache', false)) {
+            $this->storage_filesystem = new \League\Flysystem\Filesystem($this->storage_cache_adapter);
+        } else {
+            $this->storage_filesystem = new \League\Flysystem\Filesystem($this->storage_adapter);
+        }
     }
 
     // // list available buckets

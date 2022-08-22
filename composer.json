@@ -13,6 +13,7 @@
     "require": {
         "composer/installers": "~1.0",
         "league/flysystem": "^1.1",
+        "league/flysystem-cached-adapter": "^1.1",
         "league/flysystem-aws-s3-v3": "^1.0",
         "superbalist/flysystem-google-storage": "^7.2",
         "league/flysystem-webdav": "^1.0",
