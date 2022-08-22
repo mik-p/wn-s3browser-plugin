@@ -84,7 +84,7 @@ class StorageClient
         else {
             // local
             $this->storage_adapter = new \League\Flysystem\Adapter\Local(
-                __DIR__.'/root/directory/'
+                storage_path('app/s3browser/')
             );
 
             return;
