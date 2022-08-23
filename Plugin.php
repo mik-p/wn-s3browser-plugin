@@ -2,6 +2,11 @@
 
 use System\Classes\PluginBase;
 
+use Config;
+use Storage;
+
+use mikp\s3browser\Classes\StorageConfig;
+
 class Plugin extends PluginBase
 {
     public $elevated = true;
@@ -28,5 +33,25 @@ class Plugin extends PluginBase
                 'permissions' => ['mikp.s3browser.settings']
             ]
         ];
+    }
+
+    public function boot()
+    {
+        // set config
+        // Config::set('filesystems.disks.s3browser', Config::get('mikp.s3browser::config'));
+        Config::set('filesystems.disks.s3browser', StorageConfig::createConfig());
+
+        // extend user storage driver
+        Storage::extend('s3browser', function ($app, $config) {
+            // get the configured adapter
+            $adapter = (new StorageClient())->createAdapter();
+
+            // create a filesystem
+            return new \Illuminate\Filesystem\FilesystemAdapter(
+                new \League\Flysystem\Filesystem($adapter, $config),
+                $adapter,
+                $config
+            );
+        });
     }
 }

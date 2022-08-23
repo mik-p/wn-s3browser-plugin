@@ -10,160 +10,43 @@ use Aws\S3\Exception\S3Exception;
 
 use PHPSQLParser\PHPSQLParser;
 
+use Storage;
+
 class StorageClient
 {
-    // filesystem
-    public $storage_client;
-    public $storage_adapter;
-    public $storage_filesystem;
-    // cache
-    public $storage_cache;
-    public $storage_cache_adapter;
-
     public function __construct()
     {
-        $this->createFilesystem();
     }
 
     // helpers
-    // create an adapter from settings
-    public function createAdapter()
-    {
-        // choose an adapter from settings
-        if (Settings::get('s3enable', false)) {
-            // s3
-            $this->storage_client = new \Aws\S3\S3Client([
-                'version' => 'latest',
-                'region'  => Settings::get('s3region', 'us-east-1'),
-                'endpoint' => Settings::get('s3url', 'no-url'),
-                'use_path_style_endpoint' => true,
-                'credentials' => [
-                    'key'    => Settings::get('s3accesskey', 'no-access'),
-                    'secret' => Settings::get('s3secretkey', 'no-secret'),
-                ],
-            ]);
-
-            $this->storage_adapter = new \League\Flysystem\AwsS3v3\AwsS3Adapter(
-                $this->storage_client,
-                Settings::get('s3bucketname', 'no-bucket')
-            );
-
-            return;
-        }
-        elseif (Settings::get('gcpenable', false)) {
-            // gcp
-            // XXX FIXME: no credentials
-            $this->storage_client = new \Google\Cloud\Storage\StorageClient($clientOptions);
-
-            $this->storage_adapter = new \Superbalist\Flysystem\GoogleStorage\GoogleStorageAdapter(
-                $this->storage_client,
-                $storageClient->bucket(Settings::get('gcpbucketname', 'no-bucket'))
-            );
-
-            return;
-        }
-        elseif (Settings::get('webdavenable', false)) {
-            // webdav
-            $this->storage_client = new \Sabre\DAV\Client([
-                'baseUri' => Settings::get('webdavuri', 'hostname'),
-                'userName' => Settings::get('webdavuser', 'username'),
-                'password' => Settings::get('webdavpassword', 'password')
-            ]);
-
-            $this->storage_adapter = new \League\Flysystem\WebDAV\WebDAVAdapter($client);
-
-            return;
-        }
-        elseif (Settings::get('ftpenable', false)) {
-            // ftp
-            $this->storage_adapter = new \League\Flysystem\Adapter\Ftp([
-                'host' => Settings::get('ftphost', 'hostname'),
-                'root' => Settings::get('ftproot', '/root/path/'),
-                'username' => Settings::get('ftpuser', 'username'),
-                'password' => Settings::get('ftppassword', 'password')
-            ]);
-
-            return;
-        }
-        else {
-            // local
-            $this->storage_adapter = new \League\Flysystem\Adapter\Local(
-                storage_path('app/s3browser/')
-            );
-
-            return;
-        }
-    }
-
-    // create the storage filesystem
-    public function createFilesystem()
-    {
-        // create a cache store
-        $this->storage_cache = new \League\Flysystem\Cached\Storage\Memory();
-
-        // create an adapter
-        $this->createAdapter();
-
-        // add cache to adapter
-        $this->storage_cache_adapter = new \League\Flysystem\Cached\CachedAdapter(
-            $this->storage_adapter,
-            $this->storage_cache
-        );
-
-        // create a filesystem
-        if (Settings::get('s3usecache', false)) {
-            $this->storage_filesystem = new \League\Flysystem\Filesystem($this->storage_cache_adapter);
-        } else {
-            $this->storage_filesystem = new \League\Flysystem\Filesystem($this->storage_adapter);
-        }
-    }
-
     // // list available buckets
     public function listBuckets()
     {
         // check if the storage system is s3 compliant
-        if (!$this->storage_filesystem->getAdapter() instanceof \League\Flysystem\AwsS3v3\AwsS3Adapter) {
+        if (Settings::get('s3usecache', false)) {
+            $current_adapter = Storage::disk('s3browser')->getAdapter()->getAdapter();
+        } else {
+            $current_adapter = Storage::disk('s3browser')->getAdapter();
+        }
+
+        if (!($current_adapter instanceof \League\Flysystem\AwsS3v3\AwsS3Adapter)) {
             throw new StorageException("current storage system doesn't support this operation");
         }
 
-        $bucketListResponse = $this->storage_client->listBuckets();
+        $bucketListResponse = StorageConfig::createClient()->listBuckets();
         return $bucketListResponse['Buckets'];
     }
 
     // list object keys
-    public function listObjects($object)
+    public function listObjects($bucket)
     {
-        $objectsListResponse = $this->storage_filesystem->listContents(null, true);
-
-        $object_keys = [];
-
-        if (isset($objectsListResponse)) {
-            foreach ($objectsListResponse as $object) {
-                if ($object['type'] == 'file') {
-                    $object_keys[] = $object['path'];
-                }
-            }
-        }
-
-        return $object_keys;
+        return Storage::disk('s3browser')->allFiles();
     }
 
     // list object keys in a prefix
-    public function listPrefixedObjects($object, $prefix)
+    public function listPrefixedObjects($bucket, $prefix)
     {
-        $objectsListResponse = $this->storage_filesystem->listContents($prefix, true);
-
-        $object_keys = [];
-
-        if (isset($objectsListResponse)) {
-            foreach ($objectsListResponse as $object) {
-                if ($object['type'] == 'file') {
-                    $object_keys[] = $object['path'];
-                }
-            }
-        }
-
-        return $object_keys;
+        return Storage::disk('s3browser')->allFiles($prefix);
     }
 
     // list unique prefixes within a prefix (like folders)
@@ -212,10 +95,10 @@ class StorageClient
     public function getObject($bucket, $object_key)
     {
         // get content details
-        $mime_type = $this->storage_filesystem->getMimetype($object_key);
+        $mime_type = Storage::disk('s3browser')->mimeType($object_key);
 
         // get object
-        $object = $this->storage_filesystem->read($object_key);
+        $object = Storage::disk('s3browser')->get($object_key);
 
         if (!$object) {
             throw new StorageException("failed to retrieve object");
@@ -226,26 +109,13 @@ class StorageClient
             "ContentType" => $mime_type,
             "Body" => $object
         ];
-
-        // try {
-        //     $object = $this->storage_client->getObject([
-        //         'Bucket' => $bucket,
-        //         'Key' => $object_key
-        //     ]);
-
-        // } catch (S3Exception $e) {
-        //     throw new StorageException($e->getMessage());
-        // }
-
-        // // send object back
-        // return $object;
     }
 
     // put the desired object by key and path
     public function putObject($bucket, $object_key, $path, $mime_type)
     {
         // upload the file
-        $response = $this->storage_filesystem->put($object_key, file_get_contents($path), ["mimetype" => $mime_type]);
+        $response = Storage::disk('s3browser')->put($object_key, file_get_contents($path));
         if (!$response) {
             throw new StorageException("failed to upload object");
         }
@@ -256,26 +126,13 @@ class StorageClient
             ],
             "success" => $response
         ];
-
-        // try {
-        //     $result = $this->storage_client->putObject([
-        //         'Bucket' => $bucket,
-        //         'Key'    => $object_key,
-        //         'SourceFile' => $path,
-        //         'ContentType' => $mime_type
-        //     ]);
-        // } catch (S3Exception $e) {
-        //     throw new StorageException($e->getMessage());
-        // }
-
-        // return $result;
     }
 
     // delete the desired object by key
     public function deleteObject($bucket, $object_key)
     {
         // delete the file
-        $response = $this->storage_filesystem->delete($object_key);
+        $response = Storage::disk('s3browser')->delete($object_key);
         if (!$response) {
             throw new StorageException("failed to delete object");
         }
@@ -283,49 +140,14 @@ class StorageClient
         return [
             'DeleteMarker' => $response
         ];
-
-        // try {
-        //     $result = $this->storage_client->deleteObject([
-        //         'Bucket' => $bucket,
-        //         'Key' => $object_key,
-        //     ]);
-        // } catch (S3Exception $e) {
-        //     throw new StorageException($e->getMessage());
-        // }
-
-        // return $result;
     }
 
     // get all objects metadata within a prefix
     public function getObjects($bucket, $prefix)
     {
-        // $objectsListResponse = $this->storage_client->listObjects([
-        //     'Bucket' => $bucket,
-        //     'Prefix' => $prefix
-        // ]);
-
-        $objectsListResponse = $this->storage_filesystem->listContents($prefix, true);
+        $objectsListResponse = Storage::disk('s3browser')->listContents($prefix, true);
 
         $objects = [];
-
-        // if (isset($objectsListResponse['Contents'])) {
-
-        //     foreach ($objectsListResponse['Contents'] as $object) {
-
-        //         $unprefixed_key = $object['Key'];
-
-        //         if ($prefix != '') {
-        //             $unprefixed_key = str_replace($prefix . '/', '', $object['Key']);
-        //         }
-
-        //         $exploded_key = explode('/', $unprefixed_key);
-
-        //         if (count($exploded_key) == 1) {
-        //             $object['ShortName'] = $exploded_key[0];
-        //             $objects[] = $object;
-        //         }
-        //     }
-        // }
 
         if (isset($objectsListResponse)) {
 
@@ -360,9 +182,9 @@ class StorageClient
     {
         // check if the storage system is s3 compliant
         if (Settings::get('s3usecache', false)) {
-            $current_adapter = $this->storage_filesystem->getAdapter()->getAdapter();
+            $current_adapter = Storage::disk('s3browser')->getAdapter()->getAdapter();
         } else {
-            $current_adapter = $this->storage_filesystem->getAdapter();
+            $current_adapter = Storage::disk('s3browser')->getAdapter();
         }
 
         if (!($current_adapter instanceof \League\Flysystem\AwsS3v3\AwsS3Adapter)) {
@@ -370,13 +192,14 @@ class StorageClient
         }
 
         // create the presigned URL
-        $cmd = $this->storage_client->getCommand('GetObject', [
+        $client = StorageConfig::createClient();
+        $cmd = $client->getCommand('GetObject', [
             'Bucket' => $bucket,
             'Key' => $object_key
         ]);
 
         try {
-            $request = $this->storage_client->createPresignedRequest($cmd, $duration_str);
+            $request = $client->createPresignedRequest($cmd, $duration_str);
         } catch (S3Exception $e) {
             throw new StorageException($e->getMessage());
         }
@@ -391,9 +214,9 @@ class StorageClient
     {
         // check if the storage system is s3 compliant
         if (Settings::get('s3usecache', false)) {
-            $current_adapter = $this->storage_filesystem->getAdapter()->getAdapter();
+            $current_adapter = Storage::disk('s3browser')->getAdapter()->getAdapter();
         } else {
-            $current_adapter = $this->storage_filesystem->getAdapter();
+            $current_adapter = Storage::disk('s3browser')->getAdapter();
         }
 
         if (!($current_adapter instanceof \League\Flysystem\AwsS3v3\AwsS3Adapter)) {
@@ -403,9 +226,11 @@ class StorageClient
         $parser = new PHPSQLParser();
         $parsed_query = $parser->parse($select_query);
 
+        $client = StorageConfig::createClient();
+
         try {
             // retain header
-            $result = $this->storage_client->selectObjectContent([
+            $result = $client->selectObjectContent([
                 'Bucket' => $bucket,
                 'Key' => $object_key,
 
@@ -447,7 +272,7 @@ class StorageClient
             }
 
             // perform the actual query
-            $result = $this->storage_client->selectObjectContent([
+            $result = $client->selectObjectContent([
                 'Bucket' => $bucket,
                 'Key' => $object_key,
 
