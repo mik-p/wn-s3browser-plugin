@@ -359,7 +359,13 @@ class StorageClient
     public function createPresignedURL($bucket, $object_key, $duration_str)
     {
         // check if the storage system is s3 compliant
-        if (!$this->storage_filesystem->getAdapter() instanceof \League\Flysystem\AwsS3v3\AwsS3Adapter) {
+        if (Settings::get('s3usecache', false)) {
+            $current_adapter = $this->storage_filesystem->getAdapter()->getAdapter();
+        } else {
+            $current_adapter = $this->storage_filesystem->getAdapter();
+        }
+
+        if (!($current_adapter instanceof \League\Flysystem\AwsS3v3\AwsS3Adapter)) {
             throw new StorageException("current storage system doesn't support this operation");
         }
 
@@ -384,7 +390,13 @@ class StorageClient
     public function call_select($bucket, $object_key, $select_query)
     {
         // check if the storage system is s3 compliant
-        if (!$this->storage_filesystem->getAdapter() instanceof \League\Flysystem\AwsS3v3\AwsS3Adapter) {
+        if (Settings::get('s3usecache', false)) {
+            $current_adapter = $this->storage_filesystem->getAdapter()->getAdapter();
+        } else {
+            $current_adapter = $this->storage_filesystem->getAdapter();
+        }
+
+        if (!($current_adapter instanceof \League\Flysystem\AwsS3v3\AwsS3Adapter)) {
             throw new StorageException("current storage system doesn't support this operation");
         }
 
