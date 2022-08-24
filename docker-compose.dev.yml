@@ -10,4 +10,9 @@ services:
       - APP_DEBUG=true
       - COMPOSER_UPDATE=true
       - INIT_WINTER=true
+      - CACHE_STORE=redis
+      - DB_REDIS_HOST=redis
       - CMS_ADMIN_PASSWORD=admin
+
+  redis:
+    image: redis:latest

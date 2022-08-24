@@ -2,20 +2,14 @@
 
 namespace mikp\s3browser\Classes;
 
+use Config;
+
 use mikp\s3browser\Classes\StorageException;
 
 use mikp\s3browser\Models\Settings;
 
 class StorageConfig
 {
-    // filesystem
-    public $storage_client;
-    public $storage_adapter;
-    public $storage_filesystem;
-    // cache
-    public $storage_cache;
-    public $storage_cache_adapter;
-
     public function __construct()
     {
         return StorageConfig::createConfig();
@@ -27,7 +21,7 @@ class StorageConfig
         // choose an adapter from settings
         if (Settings::get('s3enable', false)) {
             // s3
-            return [
+            $config = [
                 'driver' => 's3',
                 'version' => 'latest',
                 'region'  => Settings::get('s3region', 'us-east-1'),
@@ -37,19 +31,22 @@ class StorageConfig
                     'key'    => Settings::get('s3accesskey', 'no-access'),
                     'secret' => Settings::get('s3secretkey', 'no-secret'),
                 ],
+                'key'    => Settings::get('s3accesskey', 'no-access'),
+                'secret' => Settings::get('s3secretkey', 'no-secret'),
+                'bucket' => Settings::get('s3bucketname', 'no-bucket')
             ];
         }
         elseif (Settings::get('gcpenable', false)) {
             // gcp
             // XXX FIXME: no credentials
-            return [
+            $config = [
                 'driver' => 'gcp',
                 'bucket' => Settings::get('gcpbucketname', 'no-bucket')
             ];
         }
         elseif (Settings::get('webdavenable', false)) {
             // webdav
-            return [
+            $config = [
                 'driver' => 'webdav',
                 'baseUri' => Settings::get('webdavuri', 'hostname'),
                 'userName' => Settings::get('webdavuser', 'username'),
@@ -58,7 +55,7 @@ class StorageConfig
         }
         elseif (Settings::get('ftpenable', false)) {
             // ftp
-            return [
+            $config = [
                 'driver' => 'ftp',
                 'host' => Settings::get('ftphost', 'hostname'),
                 'root' => Settings::get('ftproot', '/root/path/'),
@@ -68,11 +65,28 @@ class StorageConfig
         }
         else {
             // local
-            return [
+            $config = [
                 'driver' => 'local',
                 'root' => storage_path('app/s3browser/')
             ];
         }
+
+        // add cache options
+        if (Settings::get('s3usecache', false)) {
+            $config['cache'] = StorageConfig::createCacheConfig();
+        }
+
+        return $config;
+    }
+
+    // create cache configuration
+    public static function createCacheConfig()
+    {
+        return [
+            'store' => Config::get('cache.default', 'file'),
+            'expire' => 600,
+            'prefix' => 's3browser',
+        ];
     }
 
     // create a client from settings
@@ -98,7 +112,7 @@ class StorageConfig
             // s3
             return new \League\Flysystem\AwsS3v3\AwsS3Adapter(
                 new \Aws\S3\S3Client($config),
-                Settings::get('s3bucketname', 'no-bucket')
+                $config['bucket']
             );
         }
         elseif (Settings::get('gcpenable', false)) {
@@ -127,6 +141,22 @@ class StorageConfig
         }
     }
 
+    // create cache store
+    public static function createCacheStore()
+    {
+        $config = StorageConfig::createConfig();
+
+        if ($config['cache'] === 'redis') {
+            return new \League\Flysystem\Cached\Storage\Predis();
+        }
+
+        if ($config['cache'] === 'memcached') {
+            return new \League\Flysystem\Cached\Storage\Memcached();
+        }
+
+        return new \League\Flysystem\Cached\Storage\Memory();
+    }
+
     // create the storage filesystem
     public static function createFilesystem()
     {
@@ -137,7 +167,7 @@ class StorageConfig
             return new \League\Flysystem\Filesystem(
                 new \League\Flysystem\Cached\CachedAdapter(
                     StorageConfig::createAdapter(),
-                    new \League\Flysystem\Cached\Storage\Memory()
+                    StorageConfig::createCacheStore()
                 )
             );
         }
