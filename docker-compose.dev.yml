@@ -10,6 +10,9 @@ services:
       - APP_DEBUG=true
       - COMPOSER_UPDATE=true
       - INIT_WINTER=true
+      - PHP_MEMORY_LIMIT=8192M
+      - PHP_UPLOAD_MAX_FILESIZE=5G
+      - PHP_POST_MAX_SIZE=5G
       - CACHE_STORE=redis
       - DB_REDIS_HOST=redis
       - CMS_ADMIN_PASSWORD=admin

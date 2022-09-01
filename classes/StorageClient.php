@@ -115,7 +115,10 @@ class StorageClient
     public function putObject($bucket, $object_key, $path, $mime_type)
     {
         // upload the file
-        $response = Storage::disk('s3browser')->put($object_key, file_get_contents($path));
+        $stream = fopen($path, 'r+');
+        $response = Storage::disk('s3browser')->putStream($object_key, $stream);
+        fclose($stream);
+        // $response = Storage::disk('s3browser')->put($object_key, file_get_contents($path));
         if (!$response) {
             throw new StorageException("failed to upload object");
         }

@@ -7,6 +7,7 @@
     .s3-upload-error-text {
         color: #EA4335;
     }
+
 </style>
 {% endput %}
 
@@ -79,7 +80,7 @@
 
                     if (data[0].status == '200') {
                         // jQuery('#s3-upload-form')[0].reset();
-                        jQuery('#s3-uploadStatus{{ form_idx }}').html('<small class="muted upload-success-text">Files has uploaded successfully!</small>');
+                        jQuery('#s3-uploadStatus{{ form_idx }}').html('<small class="muted upload-success-text">Files uploaded successfully!</small>');
                     } else {
                         jQuery('#s3-uploadStatus{{ form_idx }}').html('<small class="muted s3-upload-error-text">Something went wrong</small>');
                     }
@@ -90,16 +91,27 @@
                         message += "   - " + element.file + "\n";
                     });
 
-                    jQuery.wn.flashMsg({ text: message, class: 'success', interval: 4 })
-                    // alert(message);
+                    // cms version compatibility
+                    if (jQuery.wn !== undefined) {
+                        jQuery.wn.flashMsg({ text: message, class: 'success', interval: 4 });
+                    } else if (Snowboard !== undefined) {
+                        Snowboard.flash(message, 'success', 4);
+                    } else {
+                        alert(message);
+                    }
                 },
                 error: function (data) {
                     console.log(data);
 
                     jQuery('#s3-uploadStatus{{ form_idx }}').html('<small class="muted s3-upload-error-text">File upload failed, please try again.</small>');
 
-                    jQuery.wn.flashMsg({ text: 'File upload failed, please try again.', class: 'error', interval: 4 })
-                    // alert(data.responseText);
+                    if (jQuery.wn !== undefined) {
+                        jQuery.wn.flashMsg({ text: 'File upload failed, please try again.', class: 'error', interval: 4 })
+                    } else if (Snowboard !== undefined) {
+                        Snowboard.flash('File upload failed, please try again.', 'error', 4);
+                    } else {
+                        alert(data.responseText);
+                    }
                 }
             });
         });
