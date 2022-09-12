@@ -84,7 +84,7 @@ class StorageConfig
     {
         return [
             'store' => Config::get('cache.default', 'file'),
-            'expire' => 600,
+            'expire' => 60,
             'prefix' => 's3browser',
         ];
     }
