@@ -24,5 +24,10 @@
     "extra": {
         "installer-name": "s3browser",
         "treeware": {}
+    },
+    "config": {
+        "allow-plugins": {
+            "treeware/plant": true
+        }
     }
 }
