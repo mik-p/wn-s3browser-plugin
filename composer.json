@@ -12,17 +12,16 @@
     ],
     "require": {
         "composer/installers": "~1.0",
+        "winter/wn-drivers-plugin": "^3.0",
         "predis/predis": "^1.0",
-        "league/flysystem": "^1.1",
-        "league/flysystem-cached-adapter": "^1.1",
-        "league/flysystem-aws-s3-v3": "^1.0",
-        "superbalist/flysystem-google-storage": "^7.2",
-        "league/flysystem-webdav": "^1.0",
-        "greenlion/php-sql-parser": "^4.4",
-        "treeware/plant": "^0.1.0"
+        "league/flysystem": "^3.0",
+        "league/flysystem-ftp": "^3.0",
+        "league/flysystem-aws-s3-v3": "^3.0",
+        "league/flysystem-google-cloud-storage": "^3.0",
+        "league/flysystem-webdav": "^3.0",
+        "greenlion/php-sql-parser": "^4.4"
     },
     "extra": {
-        "installer-name": "s3browser",
-        "treeware": {}
+        "installer-name": "s3browser"
     }
 }

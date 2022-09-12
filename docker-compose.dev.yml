@@ -1,7 +1,7 @@
 version: '2.2'
 services:
   wintercms:
-    image: hiltonbanes/wintercms:php7.4-apache
+    image: hiltonbanes/wintercms:php8.1-apache
     ports:
       - 8888:80
     volumes:

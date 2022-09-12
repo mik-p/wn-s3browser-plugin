@@ -116,7 +116,7 @@ class StorageClient
     {
         // upload the file
         $stream = fopen($path, 'r+');
-        $response = Storage::disk('s3browser')->putStream($object_key, $stream);
+        $response = Storage::disk('s3browser')->writeStream($object_key, $stream);
         fclose($stream);
         // $response = Storage::disk('s3browser')->put($object_key, file_get_contents($path));
         if (!$response) {
@@ -156,22 +156,24 @@ class StorageClient
 
             foreach ($objectsListResponse as $object) {
 
-                if ($object['type'] == 'file') {
+                if ($object->isFile()) {
 
-                    $unprefixed_key = $object['path'];
+                    $unprefixed_key = $object->path();
 
                     if ($prefix != '') {
-                        $unprefixed_key = str_replace($prefix . '/', '', $object['path']);
+                        $unprefixed_key = str_replace($prefix . '/', '', $object->path());
                     }
 
                     $exploded_key = explode('/', $unprefixed_key);
 
                     if (count($exploded_key) == 1) {
-                        $object['Key'] = $object["path"];
-                        $object['ShortName'] = $object["basename"];
-                        $object['Size'] = $object["size"];
-                        $object['LastModified'] = date(DATE_ISO8601, $object["timestamp"]);
-                        $objects[] = $object;
+                        $return_object = [
+                            "Key" => '/'.$object->path(),
+                            "ShortName" => $unprefixed_key,
+                            "Size" => $object->fileSize(),
+                            "LastModified" => date(DATE_ISO8601, $object->lastModified()),
+                        ];
+                        $objects[] = $return_object;
                     }
                 }
             }
