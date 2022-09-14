@@ -5,6 +5,13 @@
 
 S3 object browser plugin containing components for front end views to interact with an s3 bucket like a file browser. This is a plugin for [WinterCMS](https://wintercms.com).
 
+## Cool Features
+
+- supports many of the backends that are used in [flysystem]()
+- uses cache to list files
+- the API implements the [TUS](https://tus.io) resumable upload protocol using [tus-php](https://github.com/ankitpokhrel/tus-php), and there is a component to match.
+- middleware can be added to create custom access control
+
 ## Why?
 
 There is already a media manager and remote filesystem support in WinterCMS.
@@ -21,7 +28,7 @@ By adding a middleware to the s3browser routes only allowed files will display o
 
 ## Issues
 
-Admittedly I started this plugin without really understanding the laravel filesystem so I aim to migrate this implementation to use the built in remote storage provided by WinterCMS.
+~~Admittedly I started this plugin without really understanding the laravel filesystem so I aim to migrate this implementation to use the built in remote storage provided by WinterCMS.~~
 
 ## Usage
 
@@ -29,17 +36,19 @@ Just add the various components to views.
 
 ### API
 
-- {GET} `/api/v1/list/{bucket}`
-- {POST/GET} `/api/v1/object`
-- {GET} `/api/v1/download`
-- {POST} `/api/v1/upload`
-- {GET} `/api/v1/zip`
-- {GET} `/api/v1/select`
+- {GET} `/api/v1/s3browser/list/{bucket}`
+- {POST/GET} `/api/v1/s3browser/object`
+- {GET} `/api/v1/s3browser/download`
+- {POST} `/api/v1/s3browser/upload`
+- {GET} `/api/v1/s3browser/zip`
+- {GET} `/api/v1/s3browser/select`
+- {ANY} `/api/v1/s3browser/tus`
 
 ### components
 
 - s3browser - browse a given bucket
 - s3uploader - upload to a given bucket
+- s3query - Select style queries on tabular files (WIP)
 
 ## Licence
 

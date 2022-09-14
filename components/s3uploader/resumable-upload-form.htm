@@ -1,0 +1,54 @@
+{% put styles %}
+<link href="https://releases.transloadit.com/uppy/v3.0.1/uppy.min.css" rel="stylesheet">
+{% endput %}
+
+<!-- resumable upload features -->
+{{ form_open({url: __SELF__.api_basepath ~ "/upload?bucket=" ~ __SELF__.bucket, method: "POST", enctype:
+"multipart/form-data", id: "s3-upload-form" ~ form_idx }) }}
+<div class="form-outline mb-3">
+    <i class="far fa-folder-open trailing"></i>
+    <input id="s3-upload-file-prefix" class="form-control" type="text" name="prefix" placeholder="Path Prefix"
+        autocomplete="off" required />
+    <label class="form-label" for="s3-upload-file-prefix">Path Prefix</label>
+    <div id="s3-uppy-dash-area{{ form_idx }}"></div>
+    <input id="s3-upload-bucket" type="hidden" name="bucket" value="{{ __SELF__.bucket }}" />
+</div>
+{{ form_close() }}
+
+{% put scripts %}
+<script src="https://releases.transloadit.com/uppy/v3.0.1/uppy.min.js"></script>
+<script>
+    // resumable uploader class
+    const uppy = new Uppy.Uppy({
+        debug: true,
+        autoProceed: false,
+        onBeforeUpload: (files) => {
+            console.log(uppy);
+        }
+    })
+        .use(Uppy.Dashboard, {
+            target: '#s3-uppy-dash-area{{ form_idx }}',
+            inline: true,
+            height: 350,
+            note: 'large files are better uploaded individually',
+        })
+        .use(Uppy.Form, {
+            target: '#s3-upload-form{{ form_idx }}',
+            getMetaFromForm: true,
+        })
+        .use(Uppy.Tus, {
+            endpoint: '{{ __SELF__.api_basepath}}/tus/',
+            headers: (file) => {
+                return {
+                    'X-S3Browser-Bucket': document.getElementById('s3-upload-bucket').value,
+                    'X-S3Browser-Prefix': document.getElementById('s3-upload-file-prefix').value,
+                }
+            }
+        });
+
+    // event on success
+    uppy.on('upload-success', (file, response) => {
+        uppy.setFileState(file.id, { uploadURL: `${response.uploadURL}/get` })
+    });
+</script>
+{% endput %}

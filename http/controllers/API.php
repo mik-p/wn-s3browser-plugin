@@ -44,12 +44,20 @@ class API extends Controller
         $content .= '<li>' . $base_path . '/upload' . '</li>';
         $content .= '<li>' . $base_path . '/zip' . '</li>';
         $content .= '<li>' . $base_path . '/select' . '</li>';
+        $content .= '<li>' . $base_path . '/tus/{any?}' . '</li>';
         $content .= '</ul>';
 
         return Response::make(
             $content,
             200
         );
+    }
+
+     // api doc file
+    public function docs()
+    {
+        $path = plugins_path('mikp/s3browser/assets/docs/api-docs.json');
+        return Response::file($path, ['Content-Type' => 'application/json']);
     }
 
     // list full path of objects in a bucket
@@ -387,6 +395,18 @@ class API extends Controller
         }
 
         return Response::make('something went wrong', 500);
+    }
+
+    // use tus resumable upload api on bucket objects
+    public function tus(Request $req)
+    {
+        if (app('tus-server') === null)
+        {
+            return Response::make('the server has not been configured for this feature', 503);
+        }
+
+        // serve the tus protocol
+        return app('tus-server')->serve();
     }
 
     // helpers

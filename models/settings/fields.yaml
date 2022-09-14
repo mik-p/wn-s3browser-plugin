@@ -9,6 +9,11 @@ fields:
         span: auto
         type: switch
         comment: 'use caching for storage meta-data'
+    s3resumable:
+        label: Use Resumable API
+        span: auto
+        type: switch
+        comment: 'use resumable api for file uploader component'
 
 tabs:
     fields:

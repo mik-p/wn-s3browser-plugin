@@ -4,8 +4,6 @@ use Cms\Classes\ComponentBase;
 
 use mikp\s3browser\Models\Settings;
 
-// use Event;
-
 class S3Uploader extends ComponentBase
 {
     public $api_basepath = '/api/v1/s3browser';
@@ -44,5 +42,10 @@ class S3Uploader extends ComponentBase
         {
             $this->bucket = $this->property('bucket');
         }
+    }
+
+    public function useResumable()
+    {
+        return $this->bucket = Settings::get('s3resumable', false);
     }
 }

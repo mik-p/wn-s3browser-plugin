@@ -2,10 +2,15 @@
 
 use System\Classes\PluginBase;
 
+use App;
 use Config;
 use Storage;
 
+use TusPhp\Tus\Server as TusServer;
+
 use mikp\s3browser\Classes\StorageConfig;
+
+use mikp\s3browser\Classes\PostResumableMove;
 
 class Plugin extends PluginBase
 {
@@ -52,6 +57,42 @@ class Plugin extends PluginBase
                 $adapter,
                 $config
             );
+        });
+    }
+
+    public function register()
+    {
+        // set config from tus default
+        Config::set('s3browser', \TusPhp\Config::get());
+
+        // get new defaults from laravel config
+        Config::set('s3browser.redis.host', Config::get('database.redis.default.host'));
+        Config::set('s3browser.redis.port', Config::get('database.redis.default.port'));
+        Config::set('s3browser.redis.database', '0');
+
+        // set back tus config
+        \TusPhp\Config::set(Config::get('s3browser'), true);
+
+        // var_dump(Config::get('s3browser'));
+        // var_dump(\TusPhp\Config::get());
+
+        // setup local storage for resumable uploads
+        $resume_dir = 's3browser-resumable';
+        Storage::makeDirectory($resume_dir);
+
+        // try add tus protocol server
+        App::singleton('tus-server', function ($app) use ($resume_dir) {
+            $server = new TusServer(Config::get('cache.default', 'file'));
+
+            // add post upload move to repository
+            $listener = new PostResumableMove();
+            $server->event()->addListener('tus-server.upload.complete', [$listener, 'postUploadOperation']);
+
+            $server
+                ->setApiPath('/api/v1/s3browser/tus') // tus server endpoint.
+                ->setUploadDir(storage_path('app/'.$resume_dir)); // uploads dir.
+
+            return $server;
         });
     }
 }
