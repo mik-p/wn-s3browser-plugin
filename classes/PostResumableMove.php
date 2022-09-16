@@ -21,19 +21,19 @@ class PostResumableMove extends StorageClient
         $object_name = $fileMeta['name'];
         $object_key = implode('/', [$prefix, $object_name]);
 
-        trace_log('uploading after post');
-        trace_log([$path,
-            $bucket,
-            $prefix,
-            $mime_type,
-            $object_name,
-            $object_key
-        ]);
+        // trace_log('uploading after post');
+        // trace_log([$path,
+        //     $bucket,
+        //     $prefix,
+        //     $mime_type,
+        //     $object_name,
+        //     $object_key
+        // ]);
 
         // store file
         $result = $this->putObject($bucket, $object_key, $path, $mime_type);
 
-        trace_log($result);
+        // trace_log($result);
 
         // XXX TODO:
         // remove the uploaded object from local
@@ -42,6 +42,6 @@ class PostResumableMove extends StorageClient
         // remove expired files too
         $expired = app('tus-server')->handleExpiration();
 
-        trace_log($expired);
+        // trace_log($expired);
     }
 }
