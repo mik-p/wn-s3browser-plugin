@@ -2,5 +2,7 @@
     - Initialize plugin.
 1.1.0:
     - add support for flysystem multiple backends
+1.1.1:
+    - add flysystem cache driver
 1.2.0:
     - add tus protocol support for resumable uploads
