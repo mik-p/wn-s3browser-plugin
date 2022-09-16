@@ -1,15 +1,13 @@
-<?php namespace mikp\s3browser\Components;
+<?php
 
-use Cms\Classes\ComponentBase;
+namespace mikp\s3browser\Components;
+
+use mikp\s3browser\Classes\S3Component;
 
 use mikp\s3browser\Models\Settings;
 
-class S3Uploader extends ComponentBase
+class S3Uploader extends S3Component
 {
-    public $api_basepath = '/api/v1/s3browser';
-
-    public $bucket = 'no-bucket';
-
     public function componentDetails()
     {
         return [
@@ -21,6 +19,15 @@ class S3Uploader extends ComponentBase
     public function defineProperties()
     {
         return [
+            'tagline' => [
+                'title'             => 'Tag Line',
+                'description'       => 'an optional tag line to print',
+                'default'           => '',
+                'type'              => 'string',
+                // 'required'          => true, // no longer required
+                'validationPattern' => '',
+                'validationMessage' => 'an optional tag line to print'
+            ],
             'bucket' => [
                 'title'             => 'bucket',
                 'description'       => 'the s3 bucket to view overriding the component settings',
@@ -33,19 +40,8 @@ class S3Uploader extends ComponentBase
         ];
     }
 
-    public function init()
-    {
-        // get bucket from setting
-        $this->bucket = Settings::get('s3bucketname', 'no-bucket');
-        // override if property present
-        if($this->property('bucket') !== '')
-        {
-            $this->bucket = $this->property('bucket');
-        }
-    }
-
     public function useResumable()
     {
-        return $this->bucket = Settings::get('s3resumable', false);
+        return Settings::get('s3resumable', false);
     }
 }

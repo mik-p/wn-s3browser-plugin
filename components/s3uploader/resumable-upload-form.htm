@@ -11,8 +11,8 @@
         autocomplete="off" required />
     <label class="form-label" for="s3-upload-file-prefix">Path Prefix</label>
     <div id="s3-uppy-dash-area{{ form_idx }}"></div>
-    <input id="s3-upload-bucket" type="hidden" name="bucket" value="{{ __SELF__.bucket }}" />
 </div>
+<input id="s3-upload-bucket" type="hidden" name="bucket" value="{{ __SELF__.bucket }}" />
 {{ form_close() }}
 
 {% put scripts %}
