@@ -117,7 +117,9 @@ class StorageClient
         // upload the file
         $stream = fopen($path, 'r+');
         $response = Storage::disk('s3browser')->putStream($object_key, $stream);
-        fclose($stream);
+        if (is_resource($stream)) {
+            fclose($stream);
+        }
         // $response = Storage::disk('s3browser')->put($object_key, file_get_contents($path));
         if (!$response) {
             throw new StorageException("failed to upload object");
@@ -167,10 +169,18 @@ class StorageClient
                     $exploded_key = explode('/', $unprefixed_key);
 
                     if (count($exploded_key) == 1) {
+                        // XXX FIXME: why does this not exist sometimes
+                        $time_stamp = date(DATE_ISO8601);
+                        if (array_key_exists('timestamp', $object))
+                        {
+                            $time_stamp = date(DATE_ISO8601, $object["timestamp"]);
+                        }
+
+                        // fill return details
                         $object['Key'] = $object["path"];
                         $object['ShortName'] = $object["basename"];
                         $object['Size'] = $object["size"];
-                        $object['LastModified'] = date(DATE_ISO8601, $object["timestamp"]);
+                        $object['LastModified'] = $time_stamp;
                         $objects[] = $object;
                     }
                 }

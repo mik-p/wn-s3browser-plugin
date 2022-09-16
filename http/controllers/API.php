@@ -400,6 +400,11 @@ class API extends Controller
     // use tus resumable upload api on bucket objects
     public function tus(Request $req)
     {
+        if (!Settings::get('s3resumable', false))
+        {
+            return Response::make('the server has not been configured for this feature', 503);
+        }
+
         if (app('tus-server') === null)
         {
             return Response::make('the server has not been configured for this feature', 503);

@@ -55,6 +55,7 @@ Route::group([
         'api',
         // 'web',
         // 'Winter\User\Classes\AuthMiddleware'
+        'mikp\s3browser\Http\Middleware\SetCacheTTL',
         'mikp\s3browser\Http\Middleware\BucketPrefixInHeader'
         ]
     ], function () {

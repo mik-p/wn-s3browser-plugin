@@ -14,6 +14,13 @@ fields:
         span: auto
         type: switch
         comment: 'use resumable api for file uploader component'
+    s3resumettl:
+        label: 'Resumable Expiration Cache TTL'
+        span: left
+        placeholder: 86400
+        type: number
+        comment: 'resumable uploads time to live before expiration'
+        tab: AWS S3
 
 tabs:
     fields:
@@ -31,12 +38,12 @@ tabs:
             type: text
             comment: 'the URL to the S3 server'
             tab: AWS S3
-        s3https:
-            label: HTTPS
-            span: right
-            type: switch
-            comment: 'force https'
-            tab: AWS S3
+        # s3https:
+        #     label: HTTPS
+        #     span: right
+        #     type: switch
+        #     comment: 'force https'
+        #     tab: AWS S3
         s3region:
             label: 'S3 Region'
             span: right

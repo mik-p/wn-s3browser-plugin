@@ -78,7 +78,7 @@ class Plugin extends PluginBase
 
         // setup local storage for resumable uploads
         $resume_dir = 's3browser-resumable';
-        Storage::makeDirectory($resume_dir);
+        // Storage::makeDirectory($resume_dir);
 
         // try add tus protocol server
         App::singleton('tus-server', function ($app) use ($resume_dir) {

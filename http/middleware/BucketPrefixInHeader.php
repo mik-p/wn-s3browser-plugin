@@ -5,7 +5,6 @@ namespace mikp\s3browser\Http\Middleware;
 use Closure;
 use Response;
 use Config;
-use mikp\s3browser\Settings;
 
 class BucketPrefixInHeader
 {

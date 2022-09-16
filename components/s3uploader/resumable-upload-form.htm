@@ -23,6 +23,7 @@
         debug: true,
         autoProceed: false,
         onBeforeUpload: (files) => {
+            console.log('upload attempt');
             console.log(uppy);
         }
     })
@@ -38,6 +39,7 @@
         })
         .use(Uppy.Tus, {
             endpoint: '{{ __SELF__.api_basepath}}/tus/',
+            chunkSize: 1 * 1024 * 1024 * 1024 / 4,
             headers: (file) => {
                 return {
                     'X-S3Browser-Bucket': document.getElementById('s3-upload-bucket').value,

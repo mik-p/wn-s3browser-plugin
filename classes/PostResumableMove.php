@@ -16,18 +16,32 @@ class PostResumableMove extends StorageClient
         // get location
         $path = $fileMeta['file_path'];
         $bucket = $fileMeta['metadata']['bucket'];
-        $prefix = $fileMeta['metadata']['prefix'];
+        $prefix = rtrim($fileMeta['metadata']['prefix'], '/');
         $mime_type = $fileMeta['metadata']['filetype'];
         $object_name = $fileMeta['name'];
         $object_key = implode('/', [$prefix, $object_name]);
 
-        // store file
-        $this->putObject($bucket, $object_key, $path, $mime_type);
+        trace_log('uploading after post');
+        trace_log([$path,
+            $bucket,
+            $prefix,
+            $mime_type,
+            $object_name,
+            $object_key
+        ]);
 
+        // store file
+        $result = $this->putObject($bucket, $object_key, $path, $mime_type);
+
+        trace_log($result);
+
+        // XXX TODO:
         // remove the uploaded object from local
-        unlink($path);
+        // unlink($path);
 
         // remove expired files too
-        app('tus-server')->handleExpiration();
+        $expired = app('tus-server')->handleExpiration();
+
+        trace_log($expired);
     }
 }
