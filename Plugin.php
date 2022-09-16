@@ -78,7 +78,7 @@ class Plugin extends PluginBase
 
         // setup local storage for resumable uploads
         $resume_dir = 's3browser-resumable';
-        if (!Storage::exists())
+        if (!Storage::exists($resume_dir))
         {
             Storage::makeDirectory($resume_dir);
         }
