@@ -8,6 +8,9 @@ use mikp\s3browser\Models\Settings;
 
 class S3Uploader extends S3Component
 {
+    public static $uploader_css_loaded = 0;
+    public static $uploader_src_loaded = 0;
+
     public function componentDetails()
     {
         return [
@@ -43,5 +46,29 @@ class S3Uploader extends S3Component
     public function useResumable()
     {
         return Settings::get('s3resumable', false);
+    }
+
+    // only load uploader css once for each page
+    public static function renderUploaderSrcCss()
+    {
+        if (!S3Uploader::$uploader_css_loaded)
+        {
+            S3Uploader::$uploader_css_loaded += 1;
+            return true;
+        }
+
+        return false;
+    }
+
+    // only load uploader src once for each page
+    public static function renderUploaderSrcLoader()
+    {
+        if (!S3Uploader::$uploader_src_loaded)
+        {
+            S3Uploader::$uploader_src_loaded += 1;
+            return true;
+        }
+
+        return false;
     }
 }

@@ -1,0 +1,15 @@
+/* :root {
+} */
+
+html,
+body {
+    height: 100%;
+}
+
+.layout-page-content {
+    flex: 1 0 auto;
+}
+
+.layout-footer-sticky {
+    flex-shrink: none;
+}

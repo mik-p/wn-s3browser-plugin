@@ -1,0 +1,28 @@
+title = "index"
+url = "/:prefix?*"
+layout = "default"
+is_hidden = 0
+
+[@s3browser]
+baseuri = "/"
+prefix = "{{ :prefix }}"
+
+[@s3uploader]
+
+[@s3uploader s3uploader2]
+==
+<div class="container">
+    {% component 's3browser' %}
+    <br />
+    <div class="col-6 mb-5">
+        {% component 's3uploader' %}
+    </div>
+    <div class="col-6">
+        <h4>Second Uploader</h4>
+        <br />
+        {% partial 's3uploader2::upload-form.htm' form_idx='-second' %}
+    </div>
+</div>
+
+<br />
+<br />

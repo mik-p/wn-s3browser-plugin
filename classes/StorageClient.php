@@ -169,17 +169,25 @@ class StorageClient
                     $exploded_key = explode('/', $unprefixed_key);
 
                     if (count($exploded_key) == 1) {
-                        // XXX FIXME: why does this not exist sometimes
+                        // XXX FIXME: why do these not exist sometimes
+                        // date property
                         $time_stamp = date(DATE_ISO8601);
                         if (array_key_exists('timestamp', $object))
                         {
                             $time_stamp = date(DATE_ISO8601, $object["timestamp"]);
                         }
 
+                        // size property
+                        $size = 0;
+                        if (array_key_exists('size', $object))
+                        {
+                            $size = $object["size"];
+                        }
+
                         // fill return details
                         $object['Key'] = $object["path"];
                         $object['ShortName'] = $object["basename"];
-                        $object['Size'] = $object["size"];
+                        $object['Size'] = $size;
                         $object['LastModified'] = $time_stamp;
                         $objects[] = $object;
                     }

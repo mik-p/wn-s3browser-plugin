@@ -1,0 +1,74 @@
+description = "default layout"
+==
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>s3browser - {{ this.page.title }}</title>
+    <meta name="description" content="{{ this.page.meta_description }}">
+    <meta name="title" content="{{ this.page.meta_title }}">
+    <meta name="author" content="phenosmart">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ 'assets/favicon/favicon.ico' | theme }}?">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet">
+    <!-- MDB -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.3.0/mdb.min.css" rel="stylesheet" />
+    {% styles %}
+    <!-- default css -->
+    <link href="{{ 'assets/css/default.css' | theme }}" rel="stylesheet">
+</head>
+
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand me-2" href="/">
+                s3browser
+            </a>
+        </div>
+    </nav>
+
+    <section id="page-top" class="layout-page-content mt-5">
+        {% page %}
+    </section>
+
+    <footer class="layout-footer-sticky fixed-bottom text-center bg-dark text-muted">
+        <small>
+            s3browser plugin&copy; Copyright 2021 - {{ "now" | date("Y") }}: mik-p
+        </small>
+        <br>
+        <small class="technology-attribution">
+            Powered By -
+            <i class="fab fa-laravel"></i>
+            <a href="https://laravel.com/" target="_blank" rel="noopener noreferrer">
+                Laravel
+            </a>
+            |
+            <img src="/modules/backend/assets/images/favicon.png" alt="" height="13">
+            <a href="https://wintercms.com/" target="_blank" rel="noopener noreferrer">
+                Wintercms
+            </a>
+            |
+            <i class="fab fa-mdb"></i>
+            <a href="https://mdbootstrap.com/" target="_blank" rel="noopener noreferrer">
+                MDB
+            </a>
+        </small>
+    </footer>
+
+    <!-- jquery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <!-- mdb -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.3.0/mdb.min.js"></script>
+    {% framework extras %}
+    {% scripts %}
+</body>
+
+</html>
