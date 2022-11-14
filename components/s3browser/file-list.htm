@@ -86,7 +86,8 @@
                 {{object.ShortName}}
             </a>
         </td>
-        <td class="s3browser-file-size-td" value="{{ object.Size }}">{{ object.Size }} - Bytes</td>
+        <td class="s3browser-file-size-td" value="{{ object.Size }}">{{ __SELF__.pretty_convert_bytes(object.Size) }}
+        </td>
         <td class="s3browser-file-modified-td">{{ object.LastModified }}</td>
     </tr>
     {% endfor %}

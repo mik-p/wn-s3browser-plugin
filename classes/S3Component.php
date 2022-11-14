@@ -20,6 +20,12 @@ abstract class S3Component extends ComponentBase
 
     public $bucket = 'no-bucket';
 
+    public static function pretty_convert_bytes($size)
+    {
+        $unit=array('B','KB','MB','GB','TB','PB');
+        return @round($size/pow(1024,($i=floor(log($size,1024)))),2).' '.$unit[$i];
+    }
+
     public function onRun()
     {
         $this->createS3Client();
