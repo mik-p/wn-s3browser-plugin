@@ -25,9 +25,9 @@
     "workspaceMount": "source=${localWorkspaceFolder},target=/var/www/html/plugins/mikp/s3browser,type=bind,consistency=delegated",
     "workspaceFolder": "/var/www/html/plugins/mikp/s3browser",
     "mounts": [
-        "source=${localWorkspaceFolder}/test-theme,target=/var/www/html/themes/s3browser,type=bind"
+        "source=${localWorkspaceFolder}/test-theme/,target=/var/www/html/themes/s3browser/,type=bind,consistency=delegated"
     ],
-    "postCreateCommand": "sudo chown -R vscode:www-data /var/www/html",
+    "postCreateCommand": "docker-wn-entrypoint && sudo chown -R vscode:www-data /var/www/html",
     "customizations": {
         "vscode": {
             "extensions": [

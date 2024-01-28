@@ -18,7 +18,8 @@
         "league/flysystem-aws-s3-v3": "^3.0",
         "league/flysystem-google-cloud-storage": "^3.0",
         "league/flysystem-webdav": "^3.0",
-        "greenlion/php-sql-parser": "^4.4"
+        "greenlion/php-sql-parser": "^4.4",
+        "ankitpokhrel/tus-php": "^2.3"
     },
     "extra": {
         "installer-name": "s3browser"
