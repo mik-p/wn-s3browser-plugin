@@ -1,0 +1,40 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates
+{
+    "name": "WinterCMS",
+    "containerEnv": {
+        "XDEBUG_CONFIG": "remote_host=host.docker.internal remote_port=9000 remote_enable=1 remote_autostart=1 remote_connect_back=0",
+        "PHP_IDE_CONFIG": "serverName=WinterCMS",
+        "APP_DEBUG": "true",
+        "INIT_WINTER": "true",
+        "CMS_ADMIN_PASSWORD": "admin",
+        "CMS_ACTIVE_THEME": "s3browser"
+    },
+    "build": {
+        "dockerfile": "Dockerfile",
+        "args": {
+            "UID": "1000",
+            "GID": "1000"
+        }
+    },
+    "remoteUser": "vscode",
+    "runArgs": [
+        "--privileged",
+        "--network=host"
+    ],
+    "workspaceMount": "source=${localWorkspaceFolder},target=/var/www/html/plugins/mikp/s3browser,type=bind,consistency=delegated",
+    "workspaceFolder": "/var/www/html/plugins/mikp/s3browser",
+    "mounts": [
+        "source=${localWorkspaceFolder}/test-theme,target=/var/www/html/themes/s3browser,type=bind"
+    ],
+    "postCreateCommand": "sudo chown -R vscode:www-data /var/www/html",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "xdebug.php-pack",
+                "onecentlin.laravel-extension-pack",
+                "wintercms.winter-cms"
+            ]
+        }
+    }
+}
