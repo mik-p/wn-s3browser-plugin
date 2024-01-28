@@ -1,16 +1,15 @@
-<?php namespace mikp\s3browser\Components;
+<?php
 
-use Cms\Classes\ComponentBase;
+namespace mikp\s3browser\Components;
+
+use mikp\s3browser\Classes\S3Component;
 
 use mikp\s3browser\Models\Settings;
 
-// use Event;
-
-class S3Uploader extends ComponentBase
+class S3Uploader extends S3Component
 {
-    public $api_basepath = '/api/v1/s3browser';
-
-    public $bucket = 'no-bucket';
+    public static $uploader_css_loaded = 0;
+    public static $uploader_src_loaded = 0;
 
     public function componentDetails()
     {
@@ -23,6 +22,15 @@ class S3Uploader extends ComponentBase
     public function defineProperties()
     {
         return [
+            'tagline' => [
+                'title'             => 'Tag Line',
+                'description'       => 'an optional tag line to print',
+                'default'           => '',
+                'type'              => 'string',
+                // 'required'          => true, // no longer required
+                'validationPattern' => '',
+                'validationMessage' => 'an optional tag line to print'
+            ],
             'bucket' => [
                 'title'             => 'bucket',
                 'description'       => 'the s3 bucket to view overriding the component settings',
@@ -35,14 +43,32 @@ class S3Uploader extends ComponentBase
         ];
     }
 
-    public function init()
+    public function useResumable()
     {
-        // get bucket from setting
-        $this->bucket = Settings::get('s3bucketname', 'no-bucket');
-        // override if property present
-        if($this->property('bucket') !== '')
+        return Settings::get('s3resumable', false);
+    }
+
+    // only load uploader css once for each page
+    public static function renderUploaderSrcCss()
+    {
+        if (!S3Uploader::$uploader_css_loaded)
         {
-            $this->bucket = $this->property('bucket');
+            S3Uploader::$uploader_css_loaded += 1;
+            return true;
         }
+
+        return false;
+    }
+
+    // only load uploader src once for each page
+    public static function renderUploaderSrcLoader()
+    {
+        if (!S3Uploader::$uploader_src_loaded)
+        {
+            S3Uploader::$uploader_src_loaded += 1;
+            return true;
+        }
+
+        return false;
     }
 }

@@ -82,7 +82,13 @@
         // remove the input when done
         apiURL.parentNode.removeChild(apiURL);
 
-        jQuery.wn.flashMsg({ text: "Copied Key!", class: 'success' })
+        if (jQuery.wn !== undefined) {
+            jQuery.wn.flashMsg({ text: "Copied Key!", class: 'success' })
+        } else if (Snowboard !== undefined) {
+            Snowboard.flash("Copied Key!", 'success');
+        } else {
+            alert(message);
+        }
     }
 
     function copyAPIURL() {
@@ -100,7 +106,13 @@
         // remove the input when done
         apiURL.parentNode.removeChild(apiURL);
 
-        jQuery.wn.flashMsg({ text: "Copied API URL!", class: 'success' })
+        if (jQuery.wn !== undefined) {
+            jQuery.wn.flashMsg({ text: "Copied API URL!", class: 'success' })
+        } else if (Snowboard !== undefined) {
+            Snowboard.flash("Copied API URL!", 'success');
+        } else {
+            alert(message);
+        }
     }
 
     // create a presigned url for the object

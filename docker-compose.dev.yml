@@ -4,18 +4,35 @@ services:
     image: hiltonbanes/wintercms:php8.1-apache
     ports:
       - 8888:80
-    volumes:
-      - .:/var/www/html/plugins/mikp/s3browser/
+    depends_on:
+      redis:
+        condition: service_started
     environment:
+      - VERSION_INFO=true
       - APP_DEBUG=true
       - COMPOSER_UPDATE=true
+      # - COMPOSER_INSTALL=true
       - INIT_WINTER=true
+      - CMS_ADMIN_PASSWORD=admin
+      - CMS_ACTIVE_THEME=s3browser
+      # php
       - PHP_MEMORY_LIMIT=8192M
-      - PHP_UPLOAD_MAX_FILESIZE=5G
-      - PHP_POST_MAX_SIZE=5G
+      - PHP_UPLOAD_MAX_FILESIZE=3G
+      - PHP_POST_MAX_SIZE=3G
+      # cache
       - CACHE_STORE=redis
       - DB_REDIS_HOST=redis
-      - CMS_ADMIN_PASSWORD=admin
+    volumes:
+      - .:/var/www/html/plugins/mikp/s3browser/
+      - ./test-theme:/var/www/html/themes/s3browser/
 
+  # cache
   redis:
     image: redis:latest
+
+  redis-commander:
+    image: ghcr.io/joeferner/redis-commander:latest
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"

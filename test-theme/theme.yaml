@@ -1,0 +1,8 @@
+name: s3browser
+description: 's3browser plugin test theme'
+author: mik-p
+homepage: 'https://github.com/mik-p/wn-s3browser-plugin'
+code: ''
+previewImage: assets/images/theme-preview.png
+require:
+    - mikp.s3browser

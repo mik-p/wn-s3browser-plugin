@@ -23,10 +23,15 @@ class StorageConfig
             // s3
             $config = [
                 'driver' => 's3',
-                'version' => 'latest',
+                // 'version' => 'latest',
+                'version' => '2006-03-01',
                 'region'  => Settings::get('s3region', 'us-east-1'),
                 'endpoint' => Settings::get('s3url', 'no-url'),
                 'use_path_style_endpoint' => true,
+                // 'scheme' => Settings::get('s3https', false) ? 'https' : 'http',
+                // 'http' => [
+                //     'verify' => false
+                // ],
                 'credentials' => [
                     'key'    => Settings::get('s3accesskey', 'no-access'),
                     'secret' => Settings::get('s3secretkey', 'no-secret'),

@@ -1,9 +1,22 @@
 # wn-s3browser-plugin
 
+[![License](https://img.shields.io/github/license/mik-p/wn-s3browser-plugin)](./LICENSE)
+[![Open in Visual Studio Code](https://img.shields.io/badge/vscode-dev-blue)](https://open.vscode.dev/mik-p/wn-s3browser-plugin)
+[![GitHub issues](https://img.shields.io/github/issues/mik-p/wn-s3browser-plugin)](https://github.com/mik-p/wn-s3browser-plugin/issues)
+![GitHub forks](https://img.shields.io/github/forks/mik-p/wn-s3browser-plugin)
+![GitHub stars](https://img.shields.io/github/stars/mik-p/wn-s3browser-plugin)
+
 [![Buy me a tree](https://img.shields.io/badge/Buy%20me%20a%20tree-%F0%9F%8C%B3-green)](https://ecologi.com/mik-p-online?gift-trees)
 [![Plant a Tree for Production](https://img.shields.io/badge/dynamic/json?color=brightgreen&label=Plant%20a%20Tree%20for%20Production&query=%24.total&url=https%3A%2F%2Fpublic.offset.earth%2Fusers%2Ftreeware%2Ftrees)](https://plant.treeware.earth/mik-p/wn-s3browser-plugin)
 
 [S3](https://aws.amazon.com/s3/) object browser plugin containing components for front end viewers to interact with an s3 bucket like a file browser. This is a plugin for [WinterCMS](https://wintercms.com).
+
+## Cool Features
+
+- supports many of the backends that are used in [flysystem]()
+- uses cache to list files
+- the API implements the [TUS](https://tus.io) resumable upload protocol using [tus-php](https://github.com/ankitpokhrel/tus-php), and there is a component to match.
+- middleware can be added to create custom access control
 
 ## Why?
 
@@ -35,21 +48,23 @@ Just add the various components to views to use them.
 
 ### API
 
-- {GET} `/api/v1/list/{bucket}` - list contents of a bucket
-- {POST/GET} `/api/v1/object` - get or post an object with the given key
-- {GET} `/api/v1/download` - download an object
-- {POST} `/api/v1/upload` - upload an object or list of objects
-- {GET} `/api/v1/zip` -  download an entire prefix (multiple objects)
-- {GET} `/api/v1/select` - s3 select api (WIP)
+- {GET} `/api/v1/s3browser/list/{bucket}` - list contents of a bucket
+- {POST/GET} `/api/v1/s3browser/object` - get or post an object with the given key
+- {GET} `/api/v1/s3browser/download` - download an object
+- {POST} `/api/v1/s3browser/upload` - upload an object or list of objects
+- {GET} `/api/v1/s3browser/zip` -  download an entire prefix (multiple objects)
+- {GET} `/api/v1/s3browser/select` - s3 select api (WIP)
+- {ANY} `/api/v1/s3browser/tus` - tus resumable upload api
 
 ### components
 
 - **s3browser** - browse a given bucket
 - **s3uploader** - upload to a given bucket
-
----
+- **s3query** - Select style queries on tabular files (WIP)
 
 ## Development
+
+### Testing functions
 
 ```bash
 docker-compose -f docker-compose.dev.yml up

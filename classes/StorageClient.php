@@ -117,7 +117,9 @@ class StorageClient
         // upload the file
         $stream = fopen($path, 'r+');
         $response = Storage::disk('s3browser')->writeStream($object_key, $stream);
-        fclose($stream);
+        if (is_resource($stream)) {
+            fclose($stream);
+        }
         // $response = Storage::disk('s3browser')->put($object_key, file_get_contents($path));
         if (!$response) {
             throw new StorageException("failed to upload object");

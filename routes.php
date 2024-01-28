@@ -1,7 +1,15 @@
 <?php //namespace mikp\s3browser\Routes;
 
+$version = 'v1';
+$api_name = '/s3browser';
+$base_uri = '/api/' . $version . $api_name;
+
+// api doc json file
+Route::get($base_uri . '/api-docs.json', 'mikp\s3browser\Http\Controllers\API@docs');
+
+// file browser api
 Route::group([
-    'prefix' => '/api/v1/s3browser',
+    'prefix' => $base_uri,
     'middleware' => [
         'api',
         // 'web',
@@ -39,4 +47,19 @@ Route::group([
 
     // use s3 select api on bucket objects
     Route::get('/select', 'mikp\s3browser\Http\Controllers\API@select');
+});
+
+Route::group([
+    'prefix' => $base_uri,
+    'middleware' => [
+        'api',
+        // 'web',
+        // 'Winter\User\Classes\AuthMiddleware'
+        'mikp\s3browser\Http\Middleware\SetCacheTTL',
+        'mikp\s3browser\Http\Middleware\BucketPrefixInHeader'
+        ]
+    ], function () {
+
+    // use tus resumable upload api on bucket objects
+    Route::any('/tus/{any?}', 'mikp\s3browser\Http\Controllers\API@tus')->where('any', '.*');
 });
