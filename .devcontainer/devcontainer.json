@@ -6,6 +6,8 @@
         "XDEBUG_CONFIG": "remote_host=host.docker.internal remote_port=9000 remote_enable=1 remote_autostart=1 remote_connect_back=0",
         "PHP_IDE_CONFIG": "serverName=WinterCMS",
         "APP_DEBUG": "true",
+        "COMPOSER_UPDATE": "true",
+        "COMPOSER_REQUIRE": "winter/wn-drivers-plugin",
         "INIT_WINTER": "true",
         "CMS_ADMIN_PASSWORD": "admin",
         "CMS_ACTIVE_THEME": "s3browser"

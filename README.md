@@ -67,7 +67,7 @@ Just add the various components to views to use them.
 ### Testing functions
 
 ```bash
-docker-compose -f docker-compose.dev.yml up
+docker-compose -f docker-compose.dev.yaml up
 ```
 
 ## Licence

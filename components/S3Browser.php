@@ -6,6 +6,11 @@ use mikp\s3browser\Classes\S3Component;
 
 use mikp\s3browser\Models\Settings;
 
+/**
+ * S3Browser Component
+ *
+ * component to browse s3 objects
+ */
 class S3Browser extends S3Component
 {
     public function componentDetails()

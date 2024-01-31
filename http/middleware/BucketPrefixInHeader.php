@@ -6,6 +6,11 @@ use Closure;
 use Response;
 use Config;
 
+/**
+ * BucketPrefixInHeader
+ *
+ * Check for bucket and prefix in header
+ */
 class BucketPrefixInHeader
 {
     public function handle($request, Closure $next)

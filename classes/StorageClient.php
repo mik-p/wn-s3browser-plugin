@@ -12,6 +12,11 @@ use PHPSQLParser\PHPSQLParser;
 
 use Storage;
 
+/**
+ * StorageClient
+ *
+ * Storage client helper abstracting the storage system
+ */
 class StorageClient
 {
     public function __construct()

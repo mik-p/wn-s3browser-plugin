@@ -14,6 +14,11 @@ use Illuminate\Http\Request;
 use Storage;
 use ZipArchive;
 
+/**
+ * API Controller
+ *
+ * This controller handles all the api requests for the s3 browser plugin.
+ */
 class API extends Controller
 {
     public $storage_client;

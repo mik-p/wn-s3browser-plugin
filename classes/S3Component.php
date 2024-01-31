@@ -10,6 +10,11 @@ use mikp\s3browser\Classes\StorageClient;
 
 use Event;
 
+/**
+ * S3Component
+ *
+ * base class for s3 components
+ */
 abstract class S3Component extends ComponentBase
 {
     public $storage_client;
@@ -20,6 +25,12 @@ abstract class S3Component extends ComponentBase
 
     public $bucket = 'no-bucket';
 
+    /**
+     * Convert the given size in bytes to a human-readable format.
+     *
+     * @param int $size The size in bytes to be converted
+     * @return string The human-readable size representation
+     */
     public static function pretty_convert_bytes($size)
     {
         $unit=array('B','KB','MB','GB','TB','PB');

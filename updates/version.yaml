@@ -6,3 +6,5 @@
     - add flysystem cache driver
 1.2.0:
     - add tus protocol support for resumable uploads
+1.3.0:
+    - add support for wintercms 1.2

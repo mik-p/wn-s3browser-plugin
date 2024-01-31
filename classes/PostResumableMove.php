@@ -7,6 +7,11 @@ use mikp\s3browser\Classes\StorageException;
 
 use Storage;
 
+/**
+ * PostResumableMove
+ *
+ * Move uploaded file to s3 after post
+ */
 class PostResumableMove extends StorageClient
 {
     public function postUploadOperation(\TusPhp\Events\TusEvent $event)
@@ -35,7 +40,7 @@ class PostResumableMove extends StorageClient
 
         // trace_log($result);
 
-        // XXX TODO:
+        // TODO:
         // remove the uploaded object from local
         // unlink($path);
 

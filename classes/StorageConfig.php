@@ -8,6 +8,11 @@ use mikp\s3browser\Classes\StorageException;
 
 use mikp\s3browser\Models\Settings;
 
+/**
+ * StorageConfig
+ *
+ * Storage configuration helper
+ */
 class StorageConfig
 {
     public function __construct()
@@ -43,7 +48,7 @@ class StorageConfig
         }
         elseif (Settings::get('gcpenable', false)) {
             // gcp
-            // XXX FIXME: no credentials
+            // FIXME: no credentials
             $config = [
                 'driver' => 'gcp',
                 'bucket' => Settings::get('gcpbucketname', 'no-bucket')
@@ -122,7 +127,7 @@ class StorageConfig
         }
         elseif (Settings::get('gcpenable', false)) {
             // gcp
-            // XXX FIXME: no credentials
+            //  FIXME: no credentials
             return new \Superbalist\Flysystem\GoogleStorage\GoogleStorageAdapter(
                 new \Google\Cloud\Storage\StorageClient($config),
                 $storageClient->bucket(Settings::get('gcpbucketname', 'no-bucket'))

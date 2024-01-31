@@ -1,7 +1,7 @@
 version: '2.2'
 services:
   wintercms:
-    image: hiltonbanes/wintercms:php8.1-apache
+    image: ghcr.io/mpo-web-consulting/wintercms:8.2-apache-v1.2.4
     ports:
       - 8888:80
     depends_on:
@@ -12,6 +12,7 @@ services:
       - APP_DEBUG=true
       - COMPOSER_UPDATE=true
       # - COMPOSER_INSTALL=true
+      - COMPOSER_REQUIRE=winter/wn-drivers-plugin
       - INIT_WINTER=true
       - CMS_ADMIN_PASSWORD=admin
       - CMS_ACTIVE_THEME=s3browser
@@ -19,6 +20,13 @@ services:
       - PHP_MEMORY_LIMIT=8192M
       - PHP_UPLOAD_MAX_FILESIZE=3G
       - PHP_POST_MAX_SIZE=3G
+      # db
+      - DB_TYPE=pgsql
+      - DB_HOST=db
+      - DB_DATABASE=winter
+      - DB_USERNAME=winter
+      - DB_PASSWORD=winter
+      - DB_PORT=5432
       # cache
       - CACHE_STORE=redis
       - DB_REDIS_HOST=redis
@@ -36,3 +44,22 @@ services:
       - REDIS_HOSTS=local:redis:6379
     ports:
       - "8081:8081"
+
+  # db
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=winter
+      - POSTGRES_PASSWORD=winter
+      - POSTGRES_DB=winter
+
+  # s3
+  minio:
+    image: quay.io/minio/minio:latest
+    ports:
+    - 9000:9000
+    - 9001:9001
+    environment:
+    - MINIO_ROOT_USER=admin
+    - MINIO_ROOT_PASSWORD=password
+    command: server /data --console-address ":9001"

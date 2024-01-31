@@ -7,6 +7,11 @@ use Response;
 use Config;
 use mikp\s3browser\Models\Settings;
 
+/**
+ * SetCacheTTL
+ *
+ * Set cache ttl from settings
+ */
 class SetCacheTTL
 {
     public function handle($request, Closure $next)
